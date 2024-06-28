@@ -2,7 +2,7 @@ package module_test
 
 import (
 	"github.com/stretchr/testify/require"
-	"github.com/zhikh23/itsreg-tgservice/internal/domain/module"
+	"github.com/zhikh23/itsreg-bots/internal/domain/module"
 	"testing"
 )
 

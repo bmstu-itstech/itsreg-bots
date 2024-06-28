@@ -2,7 +2,7 @@ package participant_test
 
 import (
 	"github.com/stretchr/testify/require"
-	"github.com/zhikh23/itsreg-tgservice/internal/domain/participant"
+	"github.com/zhikh23/itsreg-bots/internal/domain/participant"
 	"testing"
 )
 
