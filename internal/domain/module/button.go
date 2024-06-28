@@ -12,13 +12,13 @@ var (
 
 // Button is a telegram keyboard button
 type Button struct {
-	Text  string  // Text is what the user sees on Button
-	Value string  // Value is what the send to chat Button
-	Next  *Module // Next is a Module that is activated after clicking on the Button
+	Text  string // Text is what the user sees on Button
+	Value string // Value is what the send to chat Button
+	Next  int32
 }
 
 // NewButton returns new Button and nil, if args is invalid, otherwise nil and errors.
-func NewButton(text string, value string, next *Module) (*Button, []error) {
+func NewButton(text string, value string, next int32) (*Button, []error) {
 	var err error
 	errs := make([]error, 0)
 
@@ -65,8 +65,8 @@ func validateButtonValue(value string) error {
 }
 
 // validateButtonNextModule returns an error if the button value is invalid; otherwise returns nil.
-func validateButtonNextModule(next *Module) error {
-	if next == nil {
+func validateButtonNextModule(next int32) error {
+	if next == 0 {
 		return ErrInvalidButtonNextModule
 	}
 	return nil

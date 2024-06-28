@@ -10,7 +10,7 @@ func TestModule_NewButton(t *testing.T) {
 	type args struct {
 		text  string
 		value string
-		next  *module.Module
+		next  int32
 	}
 
 	type posCase struct {
@@ -31,12 +31,12 @@ func TestModule_NewButton(t *testing.T) {
 			args: args{
 				text:  "text",
 				value: "value",
-				next:  &module.Module{},
+				next:  1,
 			},
 			res: &module.Button{
 				Text:  "text",
 				Value: "value",
-				Next:  &module.Module{},
+				Next:  1,
 			},
 		},
 	}
@@ -61,7 +61,7 @@ func TestModule_NewButton(t *testing.T) {
 			args: args{
 				text:  "",
 				value: "value",
-				next:  &module.Module{},
+				next:  1,
 			},
 			errs: []error{
 				module.ErrEmptyButtonText,
@@ -72,7 +72,7 @@ func TestModule_NewButton(t *testing.T) {
 			args: args{
 				text:  "text",
 				value: "",
-				next:  &module.Module{},
+				next:  1,
 			},
 			errs: []error{
 				module.ErrEmptyButtonValue,
@@ -83,7 +83,7 @@ func TestModule_NewButton(t *testing.T) {
 			args: args{
 				text:  "text",
 				value: "value",
-				next:  nil,
+				next:  0,
 			},
 			errs: []error{
 				module.ErrInvalidButtonNextModule,

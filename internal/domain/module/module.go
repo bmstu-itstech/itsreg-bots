@@ -21,21 +21,23 @@ var (
 
 // Module is a message
 type Module struct {
-	Title    string   // Title is what the Owner sees in user answers
-	Text     string   // Text is what user see
-	IsSilent bool     // If IsSilent, bot is not waiting for the user's response
-	Type     Type     // Type defines how the user's answer is processed
-	Next     *Module  // Next is the default branch, should be nil only if the module is the last
+	Id       int32
+	Title    string // Title is what the Owner sees in user answers
+	Text     string // Text is what user see
+	IsSilent bool   // If IsSilent, bot is not waiting for the user's response
+	Type     Type   // Type defines how the user's answer is processed
+	Next     int32
 	Buttons  []Button // Buttons are answer options
 }
 
 // New returns new Module and nil, if args is invalid; otherwise nil and errors.
 func New(
+	id int32,
 	title string,
 	text string,
 	isSilent bool,
 	typ Type,
-	next *Module,
+	next int32,
 	buttons []Button,
 ) (*Module, []error) {
 	var err error
@@ -60,7 +62,7 @@ func New(
 		buttons = make([]Button, 0)
 	}
 
-	if next == nil && len(buttons) > 0 {
+	if next == 0 && len(buttons) > 0 {
 		errs = append(errs, ErrInvalidLastModule)
 	}
 
@@ -73,6 +75,7 @@ func New(
 	}
 
 	return &Module{
+		Id:       id,
 		Title:    title,
 		Text:     text,
 		IsSilent: isSilent,
@@ -88,7 +91,7 @@ func (m *Module) HasButtons() bool {
 
 // IsLast returns true, if there is no next module
 func (m *Module) IsLast() bool {
-	return m.Next == nil
+	return m.Next == 0
 }
 
 // validateType returns an error if the module title is invalid, otherwise returns nil.
