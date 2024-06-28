@@ -2,7 +2,7 @@ package bot
 
 import (
 	"errors"
-	"github.com/zhikh23/itsreg-tgservice/internal/domain/module"
+	"github.com/zhikh23/itsreg-bots/internal/domain/module"
 )
 
 var (

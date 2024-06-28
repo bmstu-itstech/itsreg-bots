@@ -1,4 +1,4 @@
-module github.com/zhikh23/itsreg-tgservice
+module github.com/zhikh23/itsreg-bots
 
 go 1.21.6
 

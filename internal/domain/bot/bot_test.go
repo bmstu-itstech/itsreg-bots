@@ -2,8 +2,8 @@ package bot_test
 
 import (
 	"github.com/stretchr/testify/require"
-	"github.com/zhikh23/itsreg-tgservice/internal/domain/bot"
-	"github.com/zhikh23/itsreg-tgservice/internal/domain/module"
+	"github.com/zhikh23/itsreg-bots/internal/domain/bot"
+	"github.com/zhikh23/itsreg-bots/internal/domain/module"
 	"testing"
 )
 
