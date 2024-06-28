@@ -125,8 +125,5 @@ func validateStartModule(module *module.Module) error {
 	if module == nil {
 		return ErrInvalidStartModule
 	}
-
-	// TODO: checking for recursion?
-
 	return nil
 }
