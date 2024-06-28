@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestCreateBot(t *testing.T) {
+func TestBot_New(t *testing.T) {
 	type args struct {
 		ownerId int32
 		name    string
