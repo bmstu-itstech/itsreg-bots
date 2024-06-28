@@ -82,6 +82,10 @@ func New(
 	}, nil
 }
 
+func (m *Module) HasButtons() bool {
+	return len(m.Buttons) > 0
+}
+
 // IsLast returns true, if there is no next module
 func (m *Module) IsLast() bool {
 	return m.Next == nil

@@ -221,3 +221,29 @@ func TestModule_IsLast(t *testing.T) {
 		require.False(t, mod.IsLast())
 	})
 }
+
+func TestModule_HasButtons(t *testing.T) {
+	t.Run("module has buttons", func(t *testing.T) {
+		mod := &module.Module{
+			Title:    "title",
+			Text:     "text",
+			IsSilent: true,
+			Type:     module.String,
+			Next:     &module.Module{},
+			Buttons:  []module.Button{{}},
+		}
+		require.True(t, mod.HasButtons())
+	})
+
+	t.Run("module has no buttons", func(t *testing.T) {
+		mod := &module.Module{
+			Title:    "title",
+			Text:     "text",
+			IsSilent: true,
+			Type:     module.String,
+			Next:     &module.Module{},
+			Buttons:  make([]module.Button, 0),
+		}
+		require.False(t, mod.HasButtons())
+	})
+}
