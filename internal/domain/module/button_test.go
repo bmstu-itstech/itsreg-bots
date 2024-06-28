@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestCreateButton(t *testing.T) {
+func TestModule_NewButton(t *testing.T) {
 	type args struct {
 		text  string
 		value string
@@ -42,15 +42,17 @@ func TestCreateButton(t *testing.T) {
 	}
 
 	for _, pc := range posCases {
-		btn, errs := module.NewButton(
-			pc.text,
-			pc.value,
-			pc.next)
-		require.Nil(t, errs)
-		require.NotNil(t, btn)
-		require.Equal(t, pc.res.Text, btn.Text)
-		require.Equal(t, pc.res.Value, btn.Value)
-		require.Equal(t, pc.res.Next, btn.Next)
+		t.Run(pc.test, func(t *testing.T) {
+			btn, errs := module.NewButton(
+				pc.text,
+				pc.value,
+				pc.next)
+			require.Nil(t, errs)
+			require.NotNil(t, btn)
+			require.Equal(t, pc.res.Text, btn.Text)
+			require.Equal(t, pc.res.Value, btn.Value)
+			require.Equal(t, pc.res.Next, btn.Next)
+		})
 	}
 
 	negCases := []negCase{

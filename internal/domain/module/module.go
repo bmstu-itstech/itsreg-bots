@@ -12,18 +12,21 @@ const (
 )
 
 var (
-	ErrEmptyModuleTitle  = errors.New("invalid module title; should be not empty")
-	ErrEmptyModuleText   = errors.New("invalid module text; should be not empty")
-	ErrInvalidModuleType = errors.New("invalid module type; should be String or Number")
+	ErrEmptyModuleTitle    = errors.New("invalid module title; should be not empty")
+	ErrEmptyModuleText     = errors.New("invalid module text; should be not empty")
+	ErrInvalidModuleType   = errors.New("invalid module type; should be String or Number")
+	ErrInvalidLastModule   = errors.New("invalid last module; if next is nil, buttons should be empty")
+	ErrInvalidModuleSilent = errors.New("invalid usage silent module; should be have only default branch")
 )
 
+// Module is a message
 type Module struct {
 	Title    string   // Title is what the Owner sees in user answers
 	Text     string   // Text is what user see
 	IsSilent bool     // If IsSilent, bot is not waiting for the user's response
 	Type     Type     // Type defines how the user's answer is processed
-	Next     *Module  // Next is the next module if module has no buttons
-	Buttons  []Button // Buttons is a telegram buttons under message
+	Next     *Module  // Next is the default branch, should be nil only if the module is the last
+	Buttons  []Button // Buttons are answer options
 }
 
 // New returns new Module and nil, if args is invalid; otherwise nil and errors.
@@ -57,6 +60,14 @@ func New(
 		buttons = make([]Button, 0)
 	}
 
+	if next == nil && len(buttons) > 0 {
+		errs = append(errs, ErrInvalidLastModule)
+	}
+
+	if isSilent && len(buttons) > 0 {
+		errs = append(errs, ErrInvalidModuleSilent)
+	}
+
 	if len(errs) > 0 {
 		return nil, errs
 	}
@@ -71,8 +82,8 @@ func New(
 	}, nil
 }
 
-// IsFinish returns true, if there is no next module
-func (m *Module) IsFinish() bool {
+// IsLast returns true, if there is no next module
+func (m *Module) IsLast() bool {
 	return m.Next == nil
 }
 

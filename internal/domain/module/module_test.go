@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestCreateModule(t *testing.T) {
+func TestModule_New(t *testing.T) {
 	type args struct {
 		title    string
 		text     string
@@ -30,42 +30,82 @@ func TestCreateModule(t *testing.T) {
 
 	posCases := []posCase{
 		{
-			test: "created module successfully",
+			test: "created common module successfully",
+			args: args{
+				title:    "title",
+				text:     "text",
+				isSilent: false,
+				typ:      module.String,
+				next:     &module.Module{},
+				buttons:  nil,
+			},
+			res: &module.Module{
+				Title:    "title",
+				Text:     "text",
+				IsSilent: false,
+				Type:     module.String,
+				Next:     &module.Module{},
+				Buttons:  make([]module.Button, 0),
+			},
+		},
+		{
+			test: "created module with buttons successfully",
+			args: args{
+				title:    "title",
+				text:     "text",
+				isSilent: false,
+				typ:      module.String,
+				next:     &module.Module{},
+				buttons:  []module.Button{{}},
+			},
+			res: &module.Module{
+				Title:    "title",
+				Text:     "text",
+				IsSilent: false,
+				Type:     module.String,
+				Next:     &module.Module{},
+				Buttons:  []module.Button{{}},
+			},
+		},
+		{
+			test: "created silent module successfully",
 			args: args{
 				title:    "title",
 				text:     "text",
 				isSilent: true,
 				typ:      module.String,
-				next:     nil,
-				buttons:  make([]module.Button, 0),
+				next:     &module.Module{},
+				buttons:  nil,
 			},
 			res: &module.Module{
 				Title:    "title",
 				Text:     "text",
 				IsSilent: true,
 				Type:     module.String,
-				Next:     nil,
+				Next:     &module.Module{},
 				Buttons:  make([]module.Button, 0),
 			},
 		},
 	}
 
 	for _, pc := range posCases {
-		mod, errs := module.New(
-			pc.title,
-			pc.text,
-			pc.isSilent,
-			pc.typ,
-			pc.next,
-			pc.buttons)
-		require.Nil(t, errs)
-		require.NotNil(t, mod)
-		require.Equal(t, pc.res.Title, mod.Title)
-		require.Equal(t, pc.res.Text, mod.Text)
-		require.Equal(t, pc.res.IsSilent, mod.IsSilent)
-		require.Equal(t, pc.res.Type, mod.Type)
-		require.Equal(t, pc.res.Next, mod.Next)
-		require.Equal(t, pc.res.Buttons, mod.Buttons)
+		t.Run(pc.test, func(t *testing.T) {
+			mod, errs := module.New(
+				pc.title,
+				pc.text,
+				pc.isSilent,
+				pc.typ,
+				pc.next,
+				pc.buttons)
+			require.Nil(t, errs)
+			require.NotNil(t, mod)
+			require.Equal(t, pc.res.Title, mod.Title)
+			require.Equal(t, pc.res.Text, mod.Text)
+			require.Equal(t, pc.res.IsSilent, mod.IsSilent)
+			require.Equal(t, pc.res.Type, mod.Type)
+			require.Equal(t, pc.res.Next, mod.Next)
+			require.Equal(t, pc.res.Buttons, mod.Buttons)
+		})
 	}
 
 	negCases := []negCase{
@@ -76,7 +116,7 @@ func TestCreateModule(t *testing.T) {
 				text:     "text",
 				isSilent: true,
 				typ:      module.String,
-				next:     nil,
+				next:     &module.Module{},
 				buttons:  make([]module.Button, 0),
 			},
 			errs: []error{
@@ -90,7 +130,7 @@ func TestCreateModule(t *testing.T) {
 				text:     "",
 				isSilent: true,
 				typ:      module.String,
-				next:     nil,
+				next:     &module.Module{},
 				buttons:  make([]module.Button, 0),
 			},
 			errs: []error{
@@ -104,11 +144,39 @@ func TestCreateModule(t *testing.T) {
 				text:     "text",
 				isSilent: true,
 				typ:      0,
-				next:     nil,
+				next:     &module.Module{},
 				buttons:  make([]module.Button, 0),
 			},
 			errs: []error{
 				module.ErrInvalidModuleType,
+			},
+		},
+		{
+			test: "error to create silent module with buttons",
+			args: args{
+				title:    "title",
+				text:     "text",
+				isSilent: true,
+				typ:      module.Number,
+				next:     &module.Module{},
+				buttons:  []module.Button{{}},
+			},
+			errs: []error{
+				module.ErrInvalidModuleSilent,
+			},
+		},
+		{
+			test: "error to create last module with buttons",
+			args: args{
+				title:    "title",
+				text:     "text",
+				isSilent: false,
+				typ:      module.Number,
+				next:     nil,
+				buttons:  []module.Button{{}},
+			},
+			errs: []error{
+				module.ErrInvalidLastModule,
 			},
 		},
 	}
@@ -126,4 +194,30 @@ func TestCreateModule(t *testing.T) {
 			require.ElementsMatch(t, nc.errs, errs, "errors are not equal")
 		})
 	}
+}
+
+func TestModule_IsLast(t *testing.T) {
+	t.Run("module is last", func(t *testing.T) {
+		mod := &module.Module{
+			Title:    "title",
+			Text:     "text",
+			IsSilent: true,
+			Type:     module.String,
+			Next:     nil,
+			Buttons:  make([]module.Button, 0),
+		}
+		require.True(t, mod.IsLast())
+	})
+
+	t.Run("module is not last", func(t *testing.T) {
+		mod := &module.Module{
+			Title:    "title",
+			Text:     "text",
+			IsSilent: true,
+			Type:     module.String,
+			Next:     &module.Module{},
+			Buttons:  make([]module.Button, 0),
+		}
+		require.False(t, mod.IsLast())
+	})
 }
