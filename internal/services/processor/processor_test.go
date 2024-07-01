@@ -6,7 +6,6 @@ import (
 	botmemory "github.com/zhikh23/itsreg-bots/internal/domain/bot/memory"
 	modulememory "github.com/zhikh23/itsreg-bots/internal/domain/module/memory"
 	partmemory "github.com/zhikh23/itsreg-bots/internal/domain/participant/memory"
-	sendrecorder "github.com/zhikh23/itsreg-bots/internal/domain/sender/recorder"
 	"github.com/zhikh23/itsreg-bots/internal/entity"
 	"github.com/zhikh23/itsreg-bots/internal/objects"
 	"github.com/zhikh23/itsreg-bots/internal/services/processor"
@@ -16,8 +15,8 @@ import (
 func TestService_Process(t *testing.T) {
 	const botId int64 = 1
 
-	script := []entity.Module{
-		{
+	script := map[objects.State]entity.Module{
+		1: {
 			Node: objects.Node{
 				Id:       1,
 				Default:  2,
@@ -28,7 +27,7 @@ func TestService_Process(t *testing.T) {
 			Text:  "Module 1 text",
 			BotId: botId,
 		},
-		{
+		2: {
 			Node: objects.Node{
 				Id:       2,
 				Default:  2,
@@ -52,7 +51,7 @@ func TestService_Process(t *testing.T) {
 			Text:  "Module 2 text",
 			BotId: botId,
 		},
-		{
+		3: {
 			Node: objects.Node{
 				Id:       3,
 				Default:  0,
@@ -63,7 +62,7 @@ func TestService_Process(t *testing.T) {
 			Text:  "Module 3 text",
 			BotId: botId,
 		},
-		{
+		4: {
 			Node: objects.Node{
 				Id:       4,
 				Default:  3,
@@ -74,7 +73,7 @@ func TestService_Process(t *testing.T) {
 			Text:  "Module 4 text",
 			BotId: botId,
 		},
-		{
+		5: {
 			Node: objects.Node{
 				Id:       5,
 				Default:  4,
@@ -102,14 +101,11 @@ func TestService_Process(t *testing.T) {
 
 	participants := partmemory.New()
 
-	recorder := sendrecorder.New()
-
 	service, err := processor.New(
 		processor.WithDiscardLogger(),
 		processor.WithModuleRepository(modules),
 		processor.WithBotRepository(bots),
-		processor.WithParticipantRepository(participants),
-		processor.WithSender(recorder))
+		processor.WithParticipantRepository(participants))
 	require.NoError(t, err)
 
 	testUserId := int64(0)
@@ -119,14 +115,14 @@ func TestService_Process(t *testing.T) {
 		prtId := entity.ParticipantId{BotId: botId, UserId: testUserId}
 		ctx := context.Background()
 
-		err = service.Process(ctx, botId, testUserId, "Any text")
+		got, err := service.Process(ctx, botId, testUserId, "Any text")
 		require.NoError(t, err)
-		require.Equal(t, []sendrecorder.Record{
+		require.ElementsMatch(t, got, []objects.Message{
 			{
-				Receiver: prtId,
-				Text:     "Module 1 text",
+				Text:    "Module 1 text",
+				Buttons: script[1].Buttons,
 			},
-		}, recorder.GetLastRecords())
+		})
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
@@ -144,14 +140,14 @@ func TestService_Process(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		err = service.Process(ctx, botId, testUserId, "Any text")
+		got, err := service.Process(ctx, botId, testUserId, "Any text")
 		require.NoError(t, err)
-		require.Equal(t, []sendrecorder.Record{
+		require.ElementsMatch(t, got, []objects.Message{
 			{
-				Receiver: prtId,
-				Text:     "Module 2 text",
+				Text:    "Module 2 text",
+				Buttons: script[2].Buttons,
 			},
-		}, recorder.GetLastRecords())
+		})
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
@@ -169,14 +165,14 @@ func TestService_Process(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		err = service.Process(ctx, botId, testUserId, "To 3")
+		got, err := service.Process(ctx, botId, testUserId, "To 3")
 		require.NoError(t, err)
-		require.Equal(t, []sendrecorder.Record{
+		require.ElementsMatch(t, got, []objects.Message{
 			{
-				Receiver: prtId,
-				Text:     "Module 3 text",
+				Text:    "Module 3 text",
+				Buttons: script[3].Buttons,
 			},
-		}, recorder.GetLastRecords())
+		})
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
@@ -194,14 +190,14 @@ func TestService_Process(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		err = service.Process(ctx, botId, testUserId, "Any text")
+		got, err := service.Process(ctx, botId, testUserId, "Any text")
 		require.NoError(t, err)
-		require.Equal(t, []sendrecorder.Record{
+		require.ElementsMatch(t, got, []objects.Message{
 			{
-				Receiver: prtId,
-				Text:     "Module 2 text",
+				Text:    "Module 2 text",
+				Buttons: script[2].Buttons,
 			},
-		}, recorder.GetLastRecords())
+		})
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
@@ -219,9 +215,9 @@ func TestService_Process(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		err = service.Process(ctx, botId, testUserId, "Any text")
+		got, err := service.Process(ctx, botId, testUserId, "Any text")
 		require.NoError(t, err)
-		require.Equal(t, []sendrecorder.Record{}, recorder.GetLastRecords()) // Empty
+		require.ElementsMatch(t, got, []objects.Message{})
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
@@ -239,18 +235,18 @@ func TestService_Process(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		err = service.Process(ctx, botId, testUserId, "To 4")
+		got, err := service.Process(ctx, botId, testUserId, "To 4")
 		require.NoError(t, err)
-		require.Equal(t, []sendrecorder.Record{
+		require.ElementsMatch(t, got, []objects.Message{
 			{
-				Receiver: prtId,
-				Text:     "Module 4 text",
+				Text:    "Module 4 text",
+				Buttons: script[4].Buttons,
 			},
 			{
-				Receiver: prtId,
-				Text:     "Module 3 text",
+				Text:    "Module 3 text",
+				Buttons: script[3].Buttons,
 			},
-		}, recorder.GetLastRecords())
+		})
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
@@ -268,22 +264,22 @@ func TestService_Process(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		err = service.Process(ctx, botId, testUserId, "To 5")
+		got, err := service.Process(ctx, botId, testUserId, "To 5")
 		require.NoError(t, err)
-		require.Equal(t, []sendrecorder.Record{
+		require.ElementsMatch(t, got, []objects.Message{
 			{
-				Receiver: prtId,
-				Text:     "Module 5 text",
+				Text:    "Module 5 text",
+				Buttons: script[5].Buttons,
 			},
 			{
-				Receiver: prtId,
-				Text:     "Module 4 text",
+				Text:    "Module 4 text",
+				Buttons: script[4].Buttons,
 			},
 			{
-				Receiver: prtId,
-				Text:     "Module 3 text",
+				Text:    "Module 3 text",
+				Buttons: script[3].Buttons,
 			},
-		}, recorder.GetLastRecords())
+		})
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
