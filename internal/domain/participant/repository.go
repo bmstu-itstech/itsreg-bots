@@ -3,6 +3,7 @@ package participant
 import (
 	"errors"
 	"github.com/zhikh23/itsreg-bots/internal/entity"
+	"github.com/zhikh23/itsreg-bots/internal/objects"
 )
 
 var (
@@ -13,5 +14,5 @@ var (
 type Repository interface {
 	Save(prt entity.Participant) error
 	Get(id entity.ParticipantId) (entity.Participant, error)
-	UpdateCurrentId(id entity.ParticipantId, currentId entity.NodeId) error
+	UpdateCurrentId(id entity.ParticipantId, currentId objects.NodeId) error
 }

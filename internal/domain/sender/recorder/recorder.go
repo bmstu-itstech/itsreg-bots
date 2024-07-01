@@ -2,6 +2,7 @@ package recorder
 
 import (
 	"github.com/zhikh23/itsreg-bots/internal/entity"
+	"github.com/zhikh23/itsreg-bots/internal/objects"
 	"sync"
 )
 
@@ -21,7 +22,7 @@ func New() *Recorder {
 	}
 }
 
-func (r *Recorder) SendMessage(receiver entity.ParticipantId, msg string, _ []entity.Button) error {
+func (r *Recorder) SendMessage(receiver entity.ParticipantId, msg string, _ []objects.Button) error {
 	record := Record{
 		Receiver: receiver,
 		Text:     msg,

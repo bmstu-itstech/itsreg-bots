@@ -7,6 +7,7 @@ import (
 	partmemory "github.com/zhikh23/itsreg-bots/internal/domain/participant/memory"
 	sendrecorder "github.com/zhikh23/itsreg-bots/internal/domain/sender/recorder"
 	"github.com/zhikh23/itsreg-bots/internal/entity"
+	"github.com/zhikh23/itsreg-bots/internal/objects"
 	"github.com/zhikh23/itsreg-bots/internal/services/processor"
 	"testing"
 )
@@ -14,22 +15,22 @@ import (
 func TestService_Process(t *testing.T) {
 	script := []entity.Module{
 		{
-			Node: entity.Node{
+			Node: objects.Node{
 				Id:       1,
 				Default:  2,
 				IsSilent: false,
-				Buttons:  make([]entity.Button, 0),
+				Buttons:  make([]objects.Button, 0),
 			},
 			Title: "Module 1",
 			Text:  "Module 1 text",
 			BotId: 1,
 		},
 		{
-			Node: entity.Node{
+			Node: objects.Node{
 				Id:       2,
 				Default:  2,
 				IsSilent: false,
-				Buttons: []entity.Button{
+				Buttons: []objects.Button{
 					{
 						Text:   "To 3",
 						NextId: 3,
@@ -49,33 +50,33 @@ func TestService_Process(t *testing.T) {
 			BotId: 1,
 		},
 		{
-			Node: entity.Node{
+			Node: objects.Node{
 				Id:       3,
 				Default:  0,
 				IsSilent: false,
-				Buttons:  make([]entity.Button, 0),
+				Buttons:  make([]objects.Button, 0),
 			},
 			Title: "Module 3",
 			Text:  "Module 3 text",
 			BotId: 1,
 		},
 		{
-			Node: entity.Node{
+			Node: objects.Node{
 				Id:       4,
 				Default:  3,
 				IsSilent: true,
-				Buttons:  make([]entity.Button, 0),
+				Buttons:  make([]objects.Button, 0),
 			},
 			Title: "Module 4",
 			Text:  "Module 4 text",
 			BotId: 1,
 		},
 		{
-			Node: entity.Node{
+			Node: objects.Node{
 				Id:       5,
 				Default:  4,
 				IsSilent: true,
-				Buttons:  make([]entity.Button, 0),
+				Buttons:  make([]objects.Button, 0),
 			},
 			Title: "Module 5",
 			Text:  "Module 5 text",

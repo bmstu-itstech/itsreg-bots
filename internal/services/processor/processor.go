@@ -12,6 +12,7 @@ import (
 	"github.com/zhikh23/itsreg-bots/internal/domain/sender/recorder"
 	"github.com/zhikh23/itsreg-bots/internal/entity"
 	"github.com/zhikh23/itsreg-bots/internal/lib/logger/handlers/slogdiscard"
+	"github.com/zhikh23/itsreg-bots/internal/objects"
 	"log/slog"
 )
 
@@ -44,7 +45,7 @@ func (s *Service) Process(botId int64, userId int64, msg string) error {
 		UserId: userId,
 	}
 
-	var nodeId entity.NodeId
+	var nodeId objects.NodeId
 
 	prt, err := s.participants.Get(prtId)
 	if err != nil {
@@ -76,7 +77,7 @@ func (s *Service) Process(botId int64, userId int64, msg string) error {
 		nodeId = mod.Process(msg)
 	}
 
-	if nodeId == entity.NodeNodeId {
+	if nodeId == objects.NodeNodeId {
 		return nil // End
 	}
 

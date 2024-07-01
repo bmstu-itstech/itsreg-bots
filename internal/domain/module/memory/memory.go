@@ -3,12 +3,13 @@ package memory
 import (
 	module2 "github.com/zhikh23/itsreg-bots/internal/domain/module"
 	"github.com/zhikh23/itsreg-bots/internal/entity"
+	"github.com/zhikh23/itsreg-bots/internal/objects"
 	"sync"
 )
 
 type pair struct {
 	botId  int64
-	nodeId entity.NodeId
+	nodeId objects.NodeId
 }
 
 type Repository struct {
@@ -39,7 +40,7 @@ func (r *Repository) Save(module entity.Module) error {
 	return nil
 }
 
-func (r *Repository) Get(botId int64, nodeId entity.NodeId) (entity.Module, error) {
+func (r *Repository) Get(botId int64, nodeId objects.NodeId) (entity.Module, error) {
 	key := pair{
 		botId:  botId,
 		nodeId: nodeId,
