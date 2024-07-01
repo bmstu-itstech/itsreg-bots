@@ -102,6 +102,7 @@ func TestService_Process(t *testing.T) {
 	recorder := sendrecorder.New()
 
 	service, err := processor.New(
+		processor.WithDiscardLogger(),
 		processor.WithModuleRepository(modules),
 		processor.WithBotRepository(bots),
 		processor.WithParticipantRepository(participants),
@@ -112,24 +113,29 @@ func TestService_Process(t *testing.T) {
 
 	t.Run("start branch", func(t *testing.T) {
 		testUserId++
+		prtId := entity.ParticipantId{BotId: 1, UserId: testUserId}
+
 		err = service.Process(1, testUserId, "Any text")
 		require.NoError(t, err)
 		require.Equal(t, []sendrecorder.Record{
 			{
-				Receiver: entity.ParticipantId{BotId: 1, UserId: testUserId},
+				Receiver: prtId,
 				Text:     "Module 1 text",
 			},
 		}, recorder.GetLastRecords())
+
+		prt, err := participants.Get(prtId)
+		require.NoError(t, err)
+		require.Equal(t, objects.NodeId(1), prt.CurrentId)
 	})
 
 	t.Run("unconditional branch", func(t *testing.T) {
 		testUserId++
+		prtId := entity.ParticipantId{BotId: 1, UserId: testUserId}
+
 		err = participants.Save(entity.Participant{
-			CurrentId: 1,
-			ParticipantId: entity.ParticipantId{
-				BotId:  1,
-				UserId: testUserId,
-			},
+			CurrentId:     1,
+			ParticipantId: prtId,
 		})
 		require.NoError(t, err)
 
@@ -137,20 +143,23 @@ func TestService_Process(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, []sendrecorder.Record{
 			{
-				Receiver: entity.ParticipantId{BotId: 1, UserId: testUserId},
+				Receiver: prtId,
 				Text:     "Module 2 text",
 			},
 		}, recorder.GetLastRecords())
+
+		prt, err := participants.Get(prtId)
+		require.NoError(t, err)
+		require.Equal(t, objects.NodeId(2), prt.CurrentId)
 	})
 
 	t.Run("conditional branch", func(t *testing.T) {
 		testUserId++
+		prtId := entity.ParticipantId{BotId: 1, UserId: testUserId}
+
 		err = participants.Save(entity.Participant{
-			CurrentId: 2,
-			ParticipantId: entity.ParticipantId{
-				BotId:  1,
-				UserId: testUserId,
-			},
+			CurrentId:     2,
+			ParticipantId: prtId,
 		})
 		require.NoError(t, err)
 
@@ -158,20 +167,23 @@ func TestService_Process(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, []sendrecorder.Record{
 			{
-				Receiver: entity.ParticipantId{BotId: 1, UserId: testUserId},
+				Receiver: prtId,
 				Text:     "Module 3 text",
 			},
 		}, recorder.GetLastRecords())
+
+		prt, err := participants.Get(prtId)
+		require.NoError(t, err)
+		require.Equal(t, objects.NodeId(3), prt.CurrentId)
 	})
 
 	t.Run("default branch", func(t *testing.T) {
 		testUserId++
+		prtId := entity.ParticipantId{BotId: 1, UserId: testUserId}
+
 		err = participants.Save(entity.Participant{
-			CurrentId: 2,
-			ParticipantId: entity.ParticipantId{
-				BotId:  1,
-				UserId: testUserId,
-			},
+			CurrentId:     2,
+			ParticipantId: prtId,
 		})
 		require.NoError(t, err)
 
@@ -179,36 +191,42 @@ func TestService_Process(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, []sendrecorder.Record{
 			{
-				Receiver: entity.ParticipantId{BotId: 1, UserId: testUserId},
+				Receiver: prtId,
 				Text:     "Module 2 text",
 			},
 		}, recorder.GetLastRecords())
+
+		prt, err := participants.Get(prtId)
+		require.NoError(t, err)
+		require.Equal(t, objects.NodeId(2), prt.CurrentId)
 	})
 
 	t.Run("already finished", func(t *testing.T) {
 		testUserId++
+		prtId := entity.ParticipantId{BotId: 1, UserId: testUserId}
+
 		err = participants.Save(entity.Participant{
-			CurrentId: 3,
-			ParticipantId: entity.ParticipantId{
-				BotId:  1,
-				UserId: testUserId,
-			},
+			CurrentId:     3,
+			ParticipantId: prtId,
 		})
 		require.NoError(t, err)
 
 		err = service.Process(1, testUserId, "Any text")
 		require.NoError(t, err)
 		require.Equal(t, []sendrecorder.Record{}, recorder.GetLastRecords()) // Empty
+
+		prt, err := participants.Get(prtId)
+		require.NoError(t, err)
+		require.Equal(t, objects.NodeId(3), prt.CurrentId)
 	})
 
 	t.Run("silent module", func(t *testing.T) {
 		testUserId++
+		prtId := entity.ParticipantId{BotId: 1, UserId: testUserId}
+
 		err = participants.Save(entity.Participant{
-			CurrentId: 2,
-			ParticipantId: entity.ParticipantId{
-				BotId:  1,
-				UserId: testUserId,
-			},
+			CurrentId:     2,
+			ParticipantId: prtId,
 		})
 		require.NoError(t, err)
 
@@ -216,24 +234,27 @@ func TestService_Process(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, []sendrecorder.Record{
 			{
-				Receiver: entity.ParticipantId{BotId: 1, UserId: testUserId},
+				Receiver: prtId,
 				Text:     "Module 4 text",
 			},
 			{
-				Receiver: entity.ParticipantId{BotId: 1, UserId: testUserId},
+				Receiver: prtId,
 				Text:     "Module 3 text",
 			},
 		}, recorder.GetLastRecords())
+
+		prt, err := participants.Get(prtId)
+		require.NoError(t, err)
+		require.Equal(t, objects.NodeId(3), prt.CurrentId)
 	})
 
 	t.Run("several silent modules", func(t *testing.T) {
 		testUserId++
+		prtId := entity.ParticipantId{BotId: 1, UserId: testUserId}
+
 		err = participants.Save(entity.Participant{
-			CurrentId: 2,
-			ParticipantId: entity.ParticipantId{
-				BotId:  1,
-				UserId: testUserId,
-			},
+			CurrentId:     2,
+			ParticipantId: prtId,
 		})
 		require.NoError(t, err)
 
@@ -241,17 +262,21 @@ func TestService_Process(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, []sendrecorder.Record{
 			{
-				Receiver: entity.ParticipantId{BotId: 1, UserId: testUserId},
+				Receiver: prtId,
 				Text:     "Module 5 text",
 			},
 			{
-				Receiver: entity.ParticipantId{BotId: 1, UserId: testUserId},
+				Receiver: prtId,
 				Text:     "Module 4 text",
 			},
 			{
-				Receiver: entity.ParticipantId{BotId: 1, UserId: testUserId},
+				Receiver: prtId,
 				Text:     "Module 3 text",
 			},
 		}, recorder.GetLastRecords())
+
+		prt, err := participants.Get(prtId)
+		require.NoError(t, err)
+		require.Equal(t, objects.NodeId(3), prt.CurrentId)
 	})
 }
