@@ -1,15 +1,12 @@
 package processor
 
 import (
+	"context"
 	"errors"
 	"github.com/zhikh23/itsreg-bots/internal/domain/bot"
-	botmemory "github.com/zhikh23/itsreg-bots/internal/domain/bot/memory"
 	"github.com/zhikh23/itsreg-bots/internal/domain/module"
-	modulememory "github.com/zhikh23/itsreg-bots/internal/domain/module/memory"
 	"github.com/zhikh23/itsreg-bots/internal/domain/participant"
-	partmemory "github.com/zhikh23/itsreg-bots/internal/domain/participant/memory"
 	"github.com/zhikh23/itsreg-bots/internal/domain/sender"
-	"github.com/zhikh23/itsreg-bots/internal/domain/sender/recorder"
 	"github.com/zhikh23/itsreg-bots/internal/entity"
 	"github.com/zhikh23/itsreg-bots/internal/lib/logger/handlers/slogdiscard"
 	"github.com/zhikh23/itsreg-bots/internal/objects"
@@ -39,7 +36,7 @@ func New(cfgs ...Configuration) (*Service, error) {
 	return s, nil
 }
 
-func (s *Service) Process(botId int64, userId int64, msg string) error {
+func (s *Service) Process(ctx context.Context, botId int64, userId int64, msg string) error {
 	prtId := entity.ParticipantId{
 		BotId:  botId,
 		UserId: userId,
@@ -98,17 +95,10 @@ func (s *Service) Process(botId int64, userId int64, msg string) error {
 	}
 
 	if next.IsSilent {
-		return s.Process(botId, userId, msg)
+		return s.Process(ctx, botId, userId, msg)
 	}
 
 	return nil
-}
-
-func WithLogger(logger *slog.Logger) Configuration {
-	return func(s *Service) error {
-		s.logger = logger
-		return nil
-	}
 }
 
 func WithBotRepository(bots bot.Repository) Configuration {
@@ -142,34 +132,6 @@ func WithSender(sender sender.Sender) Configuration {
 func WithDiscardLogger() Configuration {
 	return func(s *Service) error {
 		s.logger = slogdiscard.NewDiscardLogger()
-		return nil
-	}
-}
-
-func WithMemoryModuleRepository() Configuration {
-	return func(s *Service) error {
-		s.modules = modulememory.New()
-		return nil
-	}
-}
-
-func WithMemoryParticipantRepository() Configuration {
-	return func(s *Service) error {
-		s.participants = partmemory.New()
-		return nil
-	}
-}
-
-func WithMemoryBotRepository() Configuration {
-	return func(s *Service) error {
-		s.bots = botmemory.New()
-		return nil
-	}
-}
-
-func WithRecorderSender() Configuration {
-	return func(s *Service) error {
-		s.sender = recorder.New()
 		return nil
 	}
 }
