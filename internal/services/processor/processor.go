@@ -9,8 +9,10 @@ import (
 	"github.com/zhikh23/itsreg-bots/internal/domain/sender"
 	"github.com/zhikh23/itsreg-bots/internal/entity"
 	"github.com/zhikh23/itsreg-bots/internal/lib/logger/handlers/slogdiscard"
+	"github.com/zhikh23/itsreg-bots/internal/lib/logger/handlers/slogpretty"
 	"github.com/zhikh23/itsreg-bots/internal/objects"
 	"log/slog"
+	"os"
 )
 
 type Configuration func(s *Service) error
@@ -37,6 +39,16 @@ func New(cfgs ...Configuration) (*Service, error) {
 }
 
 func (s *Service) Process(ctx context.Context, botId int64, userId int64, msg string) error {
+	const op = "processor.Service.Process"
+
+	log := s.logger.With(
+		slog.String("op", op),
+		slog.Int64("bot_id", botId),
+		slog.Int64("user_id", userId),
+		slog.String("msg", msg))
+
+	log.Info("processing message", "msg", msg)
+
 	prtId := entity.ParticipantId{
 		BotId:  botId,
 		UserId: userId,
@@ -49,6 +61,7 @@ func (s *Service) Process(ctx context.Context, botId int64, userId int64, msg st
 		if errors.Is(err, participant.ErrParticipantNotFound) {
 			b, err := s.bots.Get(botId)
 			if err != nil {
+				log.Error("failed to get bot", "err", err)
 				return err
 			}
 
@@ -59,6 +72,7 @@ func (s *Service) Process(ctx context.Context, botId int64, userId int64, msg st
 
 			err = s.participants.Save(prt)
 			if err != nil {
+				log.Error("failed to save participant", "err", err)
 				return err
 			}
 
@@ -69,34 +83,46 @@ func (s *Service) Process(ctx context.Context, botId int64, userId int64, msg st
 	} else {
 		mod, err := s.modules.Get(botId, prt.State)
 		if err != nil {
+			log.Error("failed to get module", "err", err)
 			return err
 		}
 		state = mod.Process(msg)
 	}
 
+	log.Info("processing state", "state", state)
+
 	if state == objects.EndState {
+		log.Info("end state")
 		return nil // End
 	}
 
 	next, err := s.modules.Get(botId, state)
 	if err != nil {
+		log.Error("failed to get module", "err", err)
 		return err
 	}
 
+	log.Info("got next state", "next", next.Id)
+
 	err = s.sender.SendMessage(prtId, next.Text, next.Buttons)
 	if err != nil {
+		log.Error("failed to send message", "err", err)
 		return err
 	}
 
 	prt.State = state
-	err = s.participants.UpdateCurrentId(prtId, prt.State)
+	err = s.participants.UpdateState(prtId, prt.State)
 	if err != nil {
+		log.Error("failed to update current participant", "err", err)
 		return err
 	}
 
 	if next.IsSilent {
+		log.Info("auto process silent module", "next", next.Id)
 		return s.Process(ctx, botId, userId, msg)
 	}
+
+	log.Info("end processing module", "state", state)
 
 	return nil
 }
@@ -125,6 +151,14 @@ func WithModuleRepository(modules module.Repository) Configuration {
 func WithSender(sender sender.Sender) Configuration {
 	return func(s *Service) error {
 		s.sender = sender
+		return nil
+	}
+}
+
+func WithPrettyLogger() Configuration {
+	return func(s *Service) error {
+		handler := slogpretty.PrettyHandlerOptions{}.NewPrettyHandler(os.Stdout)
+		s.logger = slog.New(handler)
 		return nil
 	}
 }

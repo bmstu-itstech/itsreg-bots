@@ -38,14 +38,14 @@ func (r *Repository) Get(id entity.ParticipantId) (entity.Participant, error) {
 	return entity.Participant{}, participant.ErrParticipantNotFound
 }
 
-func (r *Repository) UpdateCurrentId(id entity.ParticipantId, currentId objects.State) error {
+func (r *Repository) UpdateState(id entity.ParticipantId, state objects.State) error {
 	prt, ok := r.participants[id]
 
 	if !ok {
 		return participant.ErrParticipantNotFound
 	}
 
-	prt.State = currentId
+	prt.State = state
 
 	r.Lock()
 	r.participants[id] = prt
