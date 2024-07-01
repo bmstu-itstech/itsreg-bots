@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"github.com/zhikh23/itsreg-bots/internal/domain/bot"
+	botmemory "github.com/zhikh23/itsreg-bots/internal/domain/bot/memory"
 	"github.com/zhikh23/itsreg-bots/internal/domain/module"
+	modulememory "github.com/zhikh23/itsreg-bots/internal/domain/module/memory"
 	"github.com/zhikh23/itsreg-bots/internal/domain/participant"
+	partmemory "github.com/zhikh23/itsreg-bots/internal/domain/participant/memory"
 	"github.com/zhikh23/itsreg-bots/internal/entity"
 	"github.com/zhikh23/itsreg-bots/internal/lib/logger/handlers/slogdiscard"
-	"github.com/zhikh23/itsreg-bots/internal/lib/logger/handlers/slogpretty"
 	"github.com/zhikh23/itsreg-bots/internal/objects"
 	"log/slog"
-	"os"
 )
 
 type Configuration func(s *Service) error
@@ -90,7 +91,7 @@ func (s *Service) Process(ctx context.Context, botId int64, userId int64, ans st
 
 	log.Info("processing state", "state", state)
 
-	if state == objects.EndState {
+	if state == objects.StateNone {
 		log.Info("end state")
 		return messages, nil // End
 	}
@@ -136,9 +137,23 @@ func WithBotRepository(bots bot.Repository) Configuration {
 	}
 }
 
+func WithMemoryBotRepository() Configuration {
+	return func(s *Service) error {
+		s.bots = botmemory.New()
+		return nil
+	}
+}
+
 func WithParticipantRepository(participants participant.Repository) Configuration {
 	return func(s *Service) error {
 		s.participants = participants
+		return nil
+	}
+}
+
+func WithMemoryParticipantRepository() Configuration {
+	return func(s *Service) error {
+		s.participants = partmemory.New()
 		return nil
 	}
 }
@@ -150,10 +165,16 @@ func WithModuleRepository(modules module.Repository) Configuration {
 	}
 }
 
-func WithPrettyLogger() Configuration {
+func WithMemoryModuleRepository() Configuration {
 	return func(s *Service) error {
-		handler := slogpretty.PrettyHandlerOptions{}.NewPrettyHandler(os.Stdout)
-		s.logger = slog.New(handler)
+		s.modules = modulememory.New()
+		return nil
+	}
+}
+
+func WithLogger(logger *slog.Logger) Configuration {
+	return func(s *Service) error {
+		s.logger = logger
 		return nil
 	}
 }

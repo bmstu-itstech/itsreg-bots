@@ -2,7 +2,7 @@ package objects
 
 type State int64
 
-const EndState State = 0
+const StateNone State = 0
 
 type Node struct {
 	Id       State
@@ -26,5 +26,5 @@ func (n *Node) Process(msg string) State {
 }
 
 func (n *Node) IsLast() bool {
-	return n.Id == EndState
+	return n.Id == StateNone
 }
