@@ -6,7 +6,6 @@ import (
 	"github.com/zhikh23/itsreg-bots/internal/domain/bot"
 	"github.com/zhikh23/itsreg-bots/internal/domain/module"
 	"github.com/zhikh23/itsreg-bots/internal/domain/participant"
-	"github.com/zhikh23/itsreg-bots/internal/domain/sender"
 	"github.com/zhikh23/itsreg-bots/internal/entity"
 	"github.com/zhikh23/itsreg-bots/internal/lib/logger/handlers/slogdiscard"
 	"github.com/zhikh23/itsreg-bots/internal/lib/logger/handlers/slogpretty"
@@ -22,7 +21,6 @@ type Service struct {
 	bots         bot.Repository
 	modules      module.Repository
 	participants participant.Repository
-	sender       sender.Sender
 }
 
 func New(cfgs ...Configuration) (*Service, error) {
@@ -38,16 +36,16 @@ func New(cfgs ...Configuration) (*Service, error) {
 	return s, nil
 }
 
-func (s *Service) Process(ctx context.Context, botId int64, userId int64, msg string) error {
+func (s *Service) Process(ctx context.Context, botId int64, userId int64, ans string) ([]objects.Message, error) {
 	const op = "processor.Service.Process"
 
 	log := s.logger.With(
 		slog.String("op", op),
 		slog.Int64("bot_id", botId),
 		slog.Int64("user_id", userId),
-		slog.String("msg", msg))
+		slog.String("ans", ans))
 
-	log.Info("processing message", "msg", msg)
+	log.Info("processing message", "ans", ans)
 
 	prtId := entity.ParticipantId{
 		BotId:  botId,
@@ -55,6 +53,7 @@ func (s *Service) Process(ctx context.Context, botId int64, userId int64, msg st
 	}
 
 	var state objects.State
+	var messages []objects.Message
 
 	prt, err := s.participants.Get(prtId)
 	if err != nil {
@@ -62,7 +61,7 @@ func (s *Service) Process(ctx context.Context, botId int64, userId int64, msg st
 			b, err := s.bots.Get(botId)
 			if err != nil {
 				log.Error("failed to get bot", "err", err)
-				return err
+				return messages, err
 			}
 
 			prt := entity.Participant{
@@ -73,58 +72,61 @@ func (s *Service) Process(ctx context.Context, botId int64, userId int64, msg st
 			err = s.participants.Save(prt)
 			if err != nil {
 				log.Error("failed to save participant", "err", err)
-				return err
+				return messages, err
 			}
 
 			state = b.Start
 		} else {
-			return err
+			return messages, err
 		}
 	} else {
 		mod, err := s.modules.Get(botId, prt.State)
 		if err != nil {
 			log.Error("failed to get module", "err", err)
-			return err
+			return messages, err
 		}
-		state = mod.Process(msg)
+		state = mod.Process(ans)
 	}
 
 	log.Info("processing state", "state", state)
 
 	if state == objects.EndState {
 		log.Info("end state")
-		return nil // End
+		return messages, nil // End
 	}
 
 	next, err := s.modules.Get(botId, state)
 	if err != nil {
 		log.Error("failed to get module", "err", err)
-		return err
+		return messages, err
 	}
 
 	log.Info("got next state", "next", next.Id)
 
-	err = s.sender.SendMessage(prtId, next.Text, next.Buttons)
-	if err != nil {
-		log.Error("failed to send message", "err", err)
-		return err
-	}
+	messages = append(messages, objects.Message{
+		Text:    next.Text,
+		Buttons: next.Buttons,
+	})
 
 	prt.State = state
 	err = s.participants.UpdateState(prtId, prt.State)
 	if err != nil {
 		log.Error("failed to update current participant", "err", err)
-		return err
+		return messages, err
 	}
 
 	if next.IsSilent {
 		log.Info("auto process silent module", "next", next.Id)
-		return s.Process(ctx, botId, userId, msg)
+		buf, err := s.Process(ctx, botId, userId, ans)
+		if err != nil {
+			return messages, err
+		}
+		messages = append(messages, buf...)
 	}
 
 	log.Info("end processing module", "state", state)
 
-	return nil
+	return messages, nil
 }
 
 func WithBotRepository(bots bot.Repository) Configuration {
@@ -144,13 +146,6 @@ func WithParticipantRepository(participants participant.Repository) Configuratio
 func WithModuleRepository(modules module.Repository) Configuration {
 	return func(s *Service) error {
 		s.modules = modules
-		return nil
-	}
-}
-
-func WithSender(sender sender.Sender) Configuration {
-	return func(s *Service) error {
-		s.sender = sender
 		return nil
 	}
 }
