@@ -6,5 +6,5 @@ type Bot struct {
 	Id    int64
 	Title string
 	Token string
-	Start objects.NodeId
+	Start objects.State
 }

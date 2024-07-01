@@ -45,7 +45,7 @@ func (s *Service) Process(botId int64, userId int64, msg string) error {
 		UserId: userId,
 	}
 
-	var nodeId objects.NodeId
+	var state objects.State
 
 	prt, err := s.participants.Get(prtId)
 	if err != nil {
@@ -56,7 +56,7 @@ func (s *Service) Process(botId int64, userId int64, msg string) error {
 			}
 
 			prt := entity.Participant{
-				CurrentId:     b.Start,
+				State:         b.Start,
 				ParticipantId: prtId,
 			}
 
@@ -65,23 +65,23 @@ func (s *Service) Process(botId int64, userId int64, msg string) error {
 				return err
 			}
 
-			nodeId = b.Start
+			state = b.Start
 		} else {
 			return err
 		}
 	} else {
-		mod, err := s.modules.Get(botId, prt.CurrentId)
+		mod, err := s.modules.Get(botId, prt.State)
 		if err != nil {
 			return err
 		}
-		nodeId = mod.Process(msg)
+		state = mod.Process(msg)
 	}
 
-	if nodeId == objects.NodeNodeId {
+	if state == objects.EndState {
 		return nil // End
 	}
 
-	next, err := s.modules.Get(botId, nodeId)
+	next, err := s.modules.Get(botId, state)
 	if err != nil {
 		return err
 	}
@@ -91,8 +91,8 @@ func (s *Service) Process(botId int64, userId int64, msg string) error {
 		return err
 	}
 
-	prt.CurrentId = nodeId
-	err = s.participants.UpdateCurrentId(prtId, prt.CurrentId)
+	prt.State = state
+	err = s.participants.UpdateCurrentId(prtId, prt.State)
 	if err != nil {
 		return err
 	}

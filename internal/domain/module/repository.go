@@ -13,5 +13,5 @@ var (
 
 type Repository interface {
 	Save(module entity.Module) error
-	Get(botId int64, nodeId objects.NodeId) (entity.Module, error)
+	Get(botId int64, nodeId objects.State) (entity.Module, error)
 }

@@ -1,8 +1,8 @@
 package objects
 
 type Button struct {
-	Text   string
-	NextId NodeId
+	Text string
+	Next State
 }
 
 func (b *Button) Match(txt string) bool {

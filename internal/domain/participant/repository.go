@@ -14,5 +14,5 @@ var (
 type Repository interface {
 	Save(prt entity.Participant) error
 	Get(id entity.ParticipantId) (entity.Participant, error)
-	UpdateCurrentId(id entity.ParticipantId, currentId objects.NodeId) error
+	UpdateCurrentId(id entity.ParticipantId, currentId objects.State) error
 }

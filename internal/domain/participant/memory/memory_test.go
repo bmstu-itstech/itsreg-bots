@@ -20,21 +20,21 @@ func TestMemory_Get(t *testing.T) {
 				BotId:  1,
 				UserId: 42,
 			},
-			CurrentId: 1,
+			State: 1,
 		},
 		{
 			ParticipantId: entity.ParticipantId{
 				BotId:  14,
 				UserId: 42,
 			},
-			CurrentId: 1,
+			State: 1,
 		},
 		{
 			ParticipantId: entity.ParticipantId{
 				BotId:  1,
 				UserId: 9,
 			},
-			CurrentId: 1,
+			State: 1,
 		},
 	}
 

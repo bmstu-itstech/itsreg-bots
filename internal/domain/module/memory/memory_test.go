@@ -12,7 +12,7 @@ func TestMemory_Get(t *testing.T) {
 	type testCase struct {
 		name        string
 		botId       int64
-		nodeId      objects.NodeId
+		nodeId      objects.State
 		expectedErr error
 	}
 

@@ -9,7 +9,7 @@ import (
 
 type pair struct {
 	botId  int64
-	nodeId objects.NodeId
+	nodeId objects.State
 }
 
 type Repository struct {
@@ -40,7 +40,7 @@ func (r *Repository) Save(module entity.Module) error {
 	return nil
 }
 
-func (r *Repository) Get(botId int64, nodeId objects.NodeId) (entity.Module, error) {
+func (r *Repository) Get(botId int64, nodeId objects.State) (entity.Module, error) {
 	key := pair{
 		botId:  botId,
 		nodeId: nodeId,

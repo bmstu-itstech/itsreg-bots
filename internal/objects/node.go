@@ -1,24 +1,24 @@
 package objects
 
-type NodeId int64
+type State int64
 
-const NodeNodeId NodeId = 0
+const EndState State = 0
 
 type Node struct {
-	Id       NodeId
-	Default  NodeId
+	Id       State
+	Default  State
 	IsSilent bool
 	Buttons  []Button
 }
 
-func (n *Node) Process(msg string) NodeId {
+func (n *Node) Process(msg string) State {
 	if n.IsSilent {
 		return n.Default
 	}
 
 	for _, btn := range n.Buttons {
 		if btn.Match(msg) {
-			return btn.NextId
+			return btn.Next
 		}
 	}
 
@@ -26,5 +26,5 @@ func (n *Node) Process(msg string) NodeId {
 }
 
 func (n *Node) IsLast() bool {
-	return n.Id == NodeNodeId
+	return n.Id == EndState
 }

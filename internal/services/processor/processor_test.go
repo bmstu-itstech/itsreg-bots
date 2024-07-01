@@ -32,16 +32,16 @@ func TestService_Process(t *testing.T) {
 				IsSilent: false,
 				Buttons: []objects.Button{
 					{
-						Text:   "To 3",
-						NextId: 3,
+						Text: "To 3",
+						Next: 3,
 					},
 					{
-						Text:   "To 4",
-						NextId: 4,
+						Text: "To 4",
+						Next: 4,
 					},
 					{
-						Text:   "To 5",
-						NextId: 5,
+						Text: "To 5",
+						Next: 5,
 					},
 				},
 			},
@@ -126,7 +126,7 @@ func TestService_Process(t *testing.T) {
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
-		require.Equal(t, objects.NodeId(1), prt.CurrentId)
+		require.Equal(t, objects.State(1), prt.State)
 	})
 
 	t.Run("unconditional branch", func(t *testing.T) {
@@ -134,7 +134,7 @@ func TestService_Process(t *testing.T) {
 		prtId := entity.ParticipantId{BotId: 1, UserId: testUserId}
 
 		err = participants.Save(entity.Participant{
-			CurrentId:     1,
+			State:         1,
 			ParticipantId: prtId,
 		})
 		require.NoError(t, err)
@@ -150,7 +150,7 @@ func TestService_Process(t *testing.T) {
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
-		require.Equal(t, objects.NodeId(2), prt.CurrentId)
+		require.Equal(t, objects.State(2), prt.State)
 	})
 
 	t.Run("conditional branch", func(t *testing.T) {
@@ -158,7 +158,7 @@ func TestService_Process(t *testing.T) {
 		prtId := entity.ParticipantId{BotId: 1, UserId: testUserId}
 
 		err = participants.Save(entity.Participant{
-			CurrentId:     2,
+			State:         2,
 			ParticipantId: prtId,
 		})
 		require.NoError(t, err)
@@ -174,7 +174,7 @@ func TestService_Process(t *testing.T) {
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
-		require.Equal(t, objects.NodeId(3), prt.CurrentId)
+		require.Equal(t, objects.State(3), prt.State)
 	})
 
 	t.Run("default branch", func(t *testing.T) {
@@ -182,7 +182,7 @@ func TestService_Process(t *testing.T) {
 		prtId := entity.ParticipantId{BotId: 1, UserId: testUserId}
 
 		err = participants.Save(entity.Participant{
-			CurrentId:     2,
+			State:         2,
 			ParticipantId: prtId,
 		})
 		require.NoError(t, err)
@@ -198,7 +198,7 @@ func TestService_Process(t *testing.T) {
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
-		require.Equal(t, objects.NodeId(2), prt.CurrentId)
+		require.Equal(t, objects.State(2), prt.State)
 	})
 
 	t.Run("already finished", func(t *testing.T) {
@@ -206,7 +206,7 @@ func TestService_Process(t *testing.T) {
 		prtId := entity.ParticipantId{BotId: 1, UserId: testUserId}
 
 		err = participants.Save(entity.Participant{
-			CurrentId:     3,
+			State:         3,
 			ParticipantId: prtId,
 		})
 		require.NoError(t, err)
@@ -217,7 +217,7 @@ func TestService_Process(t *testing.T) {
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
-		require.Equal(t, objects.NodeId(3), prt.CurrentId)
+		require.Equal(t, objects.State(3), prt.State)
 	})
 
 	t.Run("silent module", func(t *testing.T) {
@@ -225,7 +225,7 @@ func TestService_Process(t *testing.T) {
 		prtId := entity.ParticipantId{BotId: 1, UserId: testUserId}
 
 		err = participants.Save(entity.Participant{
-			CurrentId:     2,
+			State:         2,
 			ParticipantId: prtId,
 		})
 		require.NoError(t, err)
@@ -245,7 +245,7 @@ func TestService_Process(t *testing.T) {
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
-		require.Equal(t, objects.NodeId(3), prt.CurrentId)
+		require.Equal(t, objects.State(3), prt.State)
 	})
 
 	t.Run("several silent modules", func(t *testing.T) {
@@ -253,7 +253,7 @@ func TestService_Process(t *testing.T) {
 		prtId := entity.ParticipantId{BotId: 1, UserId: testUserId}
 
 		err = participants.Save(entity.Participant{
-			CurrentId:     2,
+			State:         2,
 			ParticipantId: prtId,
 		})
 		require.NoError(t, err)
@@ -277,6 +277,6 @@ func TestService_Process(t *testing.T) {
 
 		prt, err := participants.Get(prtId)
 		require.NoError(t, err)
-		require.Equal(t, objects.NodeId(3), prt.CurrentId)
+		require.Equal(t, objects.State(3), prt.State)
 	})
 }
