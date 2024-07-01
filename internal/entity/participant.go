@@ -8,6 +8,6 @@ type ParticipantId struct {
 }
 
 type Participant struct {
-	CurrentId objects.NodeId
+	State objects.State
 	ParticipantId
 }
