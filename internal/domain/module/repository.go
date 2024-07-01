@@ -3,6 +3,7 @@ package module
 import (
 	"errors"
 	"github.com/zhikh23/itsreg-bots/internal/entity"
+	"github.com/zhikh23/itsreg-bots/internal/objects"
 )
 
 var (
@@ -12,5 +13,5 @@ var (
 
 type Repository interface {
 	Save(module entity.Module) error
-	Get(botId int64, nodeId entity.NodeId) (entity.Module, error)
+	Get(botId int64, nodeId objects.NodeId) (entity.Module, error)
 }

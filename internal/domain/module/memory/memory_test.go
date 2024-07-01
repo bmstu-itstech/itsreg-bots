@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zhikh23/itsreg-bots/internal/domain/module"
 	"github.com/zhikh23/itsreg-bots/internal/entity"
+	"github.com/zhikh23/itsreg-bots/internal/objects"
 	"testing"
 )
 
@@ -11,7 +12,7 @@ func TestMemory_Get(t *testing.T) {
 	type testCase struct {
 		name        string
 		botId       int64
-		nodeId      entity.NodeId
+		nodeId      objects.NodeId
 		expectedErr error
 	}
 
@@ -20,22 +21,22 @@ func TestMemory_Get(t *testing.T) {
 			BotId: 42,
 			Title: "Example title 1",
 			Text:  "Lorem ispum 1",
-			Node: entity.Node{
+			Node: objects.Node{
 				Id:       61,
 				Default:  62,
 				IsSilent: false,
-				Buttons:  make([]entity.Button, 0),
+				Buttons:  make([]objects.Button, 0),
 			},
 		},
 		{
 			BotId: 33,
 			Title: "Example title 2",
 			Text:  "Lorem ispum 2",
-			Node: entity.Node{
+			Node: objects.Node{
 				Id:       61,
 				Default:  62,
 				IsSilent: false,
-				Buttons:  make([]entity.Button, 0),
+				Buttons:  make([]objects.Button, 0),
 			},
 		},
 	}

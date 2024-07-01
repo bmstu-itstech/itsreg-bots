@@ -3,6 +3,7 @@ package memory
 import (
 	"github.com/zhikh23/itsreg-bots/internal/domain/participant"
 	"github.com/zhikh23/itsreg-bots/internal/entity"
+	"github.com/zhikh23/itsreg-bots/internal/objects"
 	"sync"
 )
 
@@ -37,7 +38,7 @@ func (r *Repository) Get(id entity.ParticipantId) (entity.Participant, error) {
 	return entity.Participant{}, participant.ErrParticipantNotFound
 }
 
-func (r *Repository) UpdateCurrentId(id entity.ParticipantId, currentId entity.NodeId) error {
+func (r *Repository) UpdateCurrentId(id entity.ParticipantId, currentId objects.NodeId) error {
 	prt, ok := r.participants[id]
 
 	if !ok {

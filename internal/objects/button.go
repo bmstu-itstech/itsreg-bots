@@ -1,4 +1,4 @@
-package entity
+package objects
 
 type Button struct {
 	Text   string
