@@ -5,6 +5,7 @@ go 1.21.6
 require (
 	github.com/fatih/color v1.17.0
 	github.com/stretchr/testify v1.9.0
+	go.uber.org/mock v0.4.0
 )
 
 require (
