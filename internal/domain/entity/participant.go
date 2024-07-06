@@ -15,11 +15,11 @@ type Participant struct {
 }
 
 func NewParticipant(id value.ParticipantId, current value.State) (*Participant, error) {
-	if id.BotId == 0 {
+	if id.BotId.IsUnknown() {
 		return nil, ErrInvalidParticipant
 	}
 
-	if id.UserId == 0 {
+	if id.UserId.IsUnknown() {
 		return nil, ErrInvalidParticipant
 	}
 

@@ -46,8 +46,10 @@ func (p *Processor) Process(
 	botId value.BotId,
 	userId value.UserId,
 	ans string,
-) (res []Message, err error) {
+) ([]Message, error) {
 	const op = "processor.Service.Process"
+
+	var res []Message
 
 	log := p.log.With(
 		slog.String("op", op),
@@ -57,9 +59,10 @@ func (p *Processor) Process(
 
 	log.Info("processing answer")
 
-	prtId := value.ParticipantId{
-		BotId:  botId,
-		UserId: userId,
+	prtId, err := value.NewParticipantId(botId, userId)
+	if err != nil {
+		log.Error("invalid participant id", "err", err)
+		return nil, err
 	}
 
 	var state value.State
@@ -70,30 +73,35 @@ func (p *Processor) Process(
 			b, err := p.botRepo.Bot(ctx, botId)
 			if err != nil {
 				log.Error("failed to get bot", "err", err)
-				return
+				return res, err
 			}
 
-			prt, err := entity.NewParticipant(prtId, b.Start)
+			prt, err = entity.NewParticipant(prtId, b.Start)
 			if err != nil {
 				log.Error("failed to create participant", "err", err)
-				return
+				return res, err
 			}
 
 			err = p.prtRepo.Save(ctx, prt)
 			if err != nil {
 				log.Error("failed to save participant", "err", err)
-				return
+				return res, err
 			}
 
 			state = b.Start
 		} else {
-			return
+			return res, err
 		}
 	} else {
+		if prt.Current.IsNone() {
+			log.Info("participant already finished")
+			return res, nil
+		}
+
 		block, err := p.blcRepo.Block(ctx, botId, prt.Current)
 		if err != nil {
-			log.Error("failed to get module", "err", err)
-			return
+			log.Error("failed to get block", "err", err)
+			return res, err
 		}
 
 		state, err = block.Node.Next(ans)
@@ -105,38 +113,43 @@ func (p *Processor) Process(
 		}
 	}
 
-	log.Info("processing state", "state", state)
+	prt.Current = state
+	err = p.prtRepo.UpdateState(ctx, prtId, prt.Current)
+	if err != nil {
+		log.Error("failed to update participant's state", "err", err)
+		return res, err
+	}
 
 	if state.IsNone() {
-		log.Info("end of script")
-		return
+		log.Info("participant finished script")
+		return res, nil
 	}
+
+	log.Info("processing state", "state", state)
 
 	next, err := p.blcRepo.Block(ctx, botId, state)
 	if err != nil {
-		log.Error("failed to get module", "err", err)
-		return
+		log.Error("failed to get block", "err", err)
+		return res, err
 	}
 
 	log.Info("got next state", "next", next.Node.State)
 
 	res = append(res, mapBlockToMessage(next))
 
-	prt.Current = state
-	err = p.prtRepo.UpdateState(ctx, prtId, prt.Current)
-	if err != nil {
-		log.Error("failed to update participant's state", "err", err)
-		return
-	}
-
 	if next.Node.Type == value.Message {
 		log.Info("auto process message node", "next", next.Node.State)
-		return p.Process(ctx, botId, userId, ans)
+		newRes, err := p.Process(ctx, botId, userId, ans)
+		if err != nil {
+			log.Error("failed to process message", "err", err)
+			return res, err
+		}
+		res = append(res, newRes...)
 	}
 
-	log.Info("end processing module", "state", state)
+	log.Info("end processing block", "state", state)
 
-	return
+	return res, err
 }
 
 func mapBlockToMessage(block *entity.Block) Message {
