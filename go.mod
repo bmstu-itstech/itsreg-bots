@@ -7,7 +7,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/stretchr/testify v1.9.0
-	github.com/zhikh23/itsreg-proto v0.0.0-20240701112115-04377f970323
+	github.com/zhikh23/itsreg-proto v0.1.1
 	google.golang.org/grpc v1.64.0
 )
 
