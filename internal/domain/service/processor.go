@@ -110,6 +110,25 @@ func (p *Processor) Process(
 				Text:    "Некорректный ввод!",
 				Options: nil,
 			})
+		} else if block.Node.Type != value.Message {
+			log.Info("save participant's answer")
+			ansId, err := value.NewAnswerId(prtId, block.Node.State)
+			if err != nil {
+				log.Error("failed to create answer id", "err", err)
+				return res, err
+			}
+
+			answer, err := entity.NewAnswer(ansId, ans)
+			if err != nil {
+				log.Error("failed to create answer", "err", err)
+				return res, err
+			}
+
+			err = p.ansRepo.Save(ctx, answer)
+			if err != nil {
+				log.Error("failed to save answer", "err", err)
+				return res, err
+			}
 		}
 	}
 
