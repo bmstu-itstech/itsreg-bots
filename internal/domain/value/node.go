@@ -21,10 +21,6 @@ func NewMessageNode(state State, def State) (Node, error) {
 		return Node{}, ErrInvalidNode
 	}
 
-	if def == StateNone {
-		return Node{}, ErrInvalidNode
-	}
-
 	return Node{
 		Type:    Message,
 		State:   state,
@@ -35,10 +31,6 @@ func NewMessageNode(state State, def State) (Node, error) {
 
 func NewQuestionNode(state State, def State) (Node, error) {
 	if state == StateNone {
-		return Node{}, ErrInvalidNode
-	}
-
-	if def == StateNone {
 		return Node{}, ErrInvalidNode
 	}
 
