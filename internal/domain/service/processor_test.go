@@ -87,6 +87,10 @@ func TestService_Process(t *testing.T) {
 		prt, err := prtRepos.Participant(ctx, prtId)
 		require.NoError(t, err)
 		require.Equal(t, value.State(1), prt.Current)
+
+		ans, err := ansRepos.AnswersFrom(ctx, prtId)
+		require.NoError(t, err)
+		require.Empty(t, ans)
 	})
 
 	t.Run("should process question block", func(t *testing.T) {
@@ -111,6 +115,17 @@ func TestService_Process(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, value.State(2), prt.Current)
 
+		ans, err := ansRepos.AnswersFrom(ctx, prtId)
+		require.NoError(t, err)
+		require.Len(t, ans, 1)
+		exp := entity.Answer{
+			Id: value.AnswerId{
+				ParticipantId: prtId,
+				State:         value.State(1),
+			},
+			Value: "Any text",
+		}
+		require.Equal(t, exp, *ans[0])
 	})
 
 	t.Run("should process selection block", func(t *testing.T) {
@@ -132,6 +147,18 @@ func TestService_Process(t *testing.T) {
 		prt, err = prtRepos.Participant(ctx, prtId)
 		require.NoError(t, err)
 		require.Equal(t, value.State(5), prt.Current)
+
+		ans, err := ansRepos.AnswersFrom(ctx, prtId)
+		require.NoError(t, err)
+		require.Len(t, ans, 1)
+		exp := entity.Answer{
+			Id: value.AnswerId{
+				ParticipantId: prtId,
+				State:         value.State(2),
+			},
+			Value: "To 5",
+		}
+		require.Equal(t, exp, *ans[0])
 	})
 
 	t.Run("should process selection and message block", func(t *testing.T) {
@@ -154,6 +181,18 @@ func TestService_Process(t *testing.T) {
 		prt, err = prtRepos.Participant(ctx, prtId)
 		require.NoError(t, err)
 		require.Equal(t, value.StateNone, prt.Current)
+
+		ans, err := ansRepos.AnswersFrom(ctx, prtId)
+		require.NoError(t, err)
+		require.Len(t, ans, 1)
+		exp := entity.Answer{
+			Id: value.AnswerId{
+				ParticipantId: prtId,
+				State:         value.State(2),
+			},
+			Value: "To 4",
+		}
+		require.Equal(t, exp, *ans[0])
 	})
 
 	t.Run("should return error when participant already finished", func(t *testing.T) {
@@ -175,6 +214,10 @@ func TestService_Process(t *testing.T) {
 		prt, err = prtRepos.Participant(ctx, prtId)
 		require.NoError(t, err)
 		require.Equal(t, value.StateNone, prt.Current)
+
+		ans, err := ansRepos.AnswersFrom(ctx, prtId)
+		require.NoError(t, err)
+		require.Empty(t, ans)
 	})
 
 	t.Run("should answer an error when participant does not choose an option", func(t *testing.T) {
@@ -194,5 +237,9 @@ func TestService_Process(t *testing.T) {
 		prt, err = prtRepos.Participant(ctx, prtId)
 		require.NoError(t, err)
 		require.Equal(t, value.State(2), prt.Current)
+
+		ans, err := ansRepos.AnswersFrom(ctx, prtId)
+		require.NoError(t, err)
+		require.Empty(t, ans)
 	})
 }
