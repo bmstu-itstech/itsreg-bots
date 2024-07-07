@@ -5,8 +5,11 @@ import (
 )
 
 var (
-	ErrInvalidNode     = errors.New("invalid node")
-	ErrIncorrectAnswer = errors.New("incorrect answer")
+	ErrInvalidNodeState     = errors.New("invalid node state")
+	ErrInvalidMessageNode   = errors.New("invalid message node")
+	ErrInvalidQuestionNode  = errors.New("invalid question node")
+	ErrInvalidSelectionNode = errors.New("invalid selection node")
+	ErrIncorrectAnswer      = errors.New("incorrect answer")
 )
 
 type Node struct {
@@ -18,7 +21,7 @@ type Node struct {
 
 func NewMessageNode(state State, def State) (Node, error) {
 	if state == StateNone {
-		return Node{}, ErrInvalidNode
+		return Node{}, ErrInvalidNodeState
 	}
 
 	return Node{
@@ -31,7 +34,7 @@ func NewMessageNode(state State, def State) (Node, error) {
 
 func NewQuestionNode(state State, def State) (Node, error) {
 	if state == StateNone {
-		return Node{}, ErrInvalidNode
+		return Node{}, ErrInvalidNodeState
 	}
 
 	return Node{
@@ -44,11 +47,11 @@ func NewQuestionNode(state State, def State) (Node, error) {
 
 func NewSelectionNode(state State, options []Option) (Node, error) {
 	if state == StateNone {
-		return Node{}, ErrInvalidNode
+		return Node{}, ErrInvalidNodeState
 	}
 
 	if options == nil || len(options) == 0 {
-		return Node{}, ErrInvalidNode
+		return Node{}, ErrInvalidSelectionNode
 	}
 
 	return Node{

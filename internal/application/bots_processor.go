@@ -56,7 +56,7 @@ func (p *BotsProcessor) Process(
 
 	prtId, err := value.NewParticipantId(value.BotId(botId), value.UserId(userId))
 	if err != nil {
-		log.Error("invalid participant id", "err", err)
+		log.Error("invalid participant id", "err", err.Error())
 		return nil, err
 	}
 
@@ -67,19 +67,19 @@ func (p *BotsProcessor) Process(
 		if errors.Is(err, interfaces.ErrParticipantNotFound) {
 			b, err := p.botRepo.Bot(ctx, prtId.BotId)
 			if err != nil {
-				log.Error("failed to get bot", "err", err)
+				log.Error("failed to get bot", "err", err.Error())
 				return res, err
 			}
 
 			prt, err = entity.NewParticipant(prtId, b.Start)
 			if err != nil {
-				log.Error("failed to create participant", "err", err)
+				log.Error("failed to create participant", "err", err.Error())
 				return res, err
 			}
 
 			err = p.prtRepo.Save(ctx, prt)
 			if err != nil {
-				log.Error("failed to save participant", "err", err)
+				log.Error("failed to save participant", "err", err.Error())
 				return res, err
 			}
 
@@ -95,7 +95,7 @@ func (p *BotsProcessor) Process(
 
 		block, err := p.blcRepo.Block(ctx, prtId.BotId, prt.Current)
 		if err != nil {
-			log.Error("failed to get block", "err", err)
+			log.Error("failed to get block", "err", err.Error())
 			return res, err
 		}
 
@@ -109,19 +109,19 @@ func (p *BotsProcessor) Process(
 			log.Info("save participant's answer")
 			ansId, err := value.NewAnswerId(prtId, block.Node.State)
 			if err != nil {
-				log.Error("failed to create answer id", "err", err)
+				log.Error("failed to create answer id", "err", err.Error())
 				return res, err
 			}
 
 			answer, err := entity.NewAnswer(ansId, ans)
 			if err != nil {
-				log.Error("failed to create answer", "err", err)
+				log.Error("failed to create answer", "err", err.Error())
 				return res, err
 			}
 
 			err = p.ansRepo.Save(ctx, answer)
 			if err != nil {
-				log.Error("failed to save answer", "err", err)
+				log.Error("failed to save answer", "err", err.Error())
 				return res, err
 			}
 		}
@@ -130,7 +130,7 @@ func (p *BotsProcessor) Process(
 	prt.Current = state
 	err = p.prtRepo.UpdateState(ctx, prtId, prt.Current)
 	if err != nil {
-		log.Error("failed to update participant's state", "err", err)
+		log.Error("failed to update participant's state", "err", err.Error())
 		return res, err
 	}
 
@@ -143,7 +143,7 @@ func (p *BotsProcessor) Process(
 
 	next, err := p.blcRepo.Block(ctx, prtId.BotId, state)
 	if err != nil {
-		log.Error("failed to get block", "err", err)
+		log.Error("failed to get block", "err", err.Error())
 		return res, err
 	}
 
@@ -155,7 +155,7 @@ func (p *BotsProcessor) Process(
 		log.Info("auto process message node", "next", next.Node.State)
 		newRes, err := p.Process(ctx, botId, userId, ans)
 		if err != nil {
-			log.Error("failed to process message", "err", err)
+			log.Error("failed to process message", "err", err.Error())
 			return res, err
 		}
 		res = append(res, newRes...)
