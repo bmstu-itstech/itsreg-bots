@@ -95,15 +95,15 @@ func (p *BotsProcessor) Process(
 			return res, err
 		}
 
-		state, err = block.Node.Next(ans)
+		state, err = block.Next(ans)
 		if errors.Is(err, value.ErrIncorrectAnswer) {
 			res = append(res, dto.Message{
 				Text:    "Некорректный ввод!",
 				Options: nil,
 			})
-		} else if block.Node.Type != value.Message {
+		} else if block.Type != value.Message {
 			log.Info("save participant's answer")
-			ansId, err := value.NewAnswerId(prtId, block.Node.State)
+			ansId, err := value.NewAnswerId(prtId, block.State)
 			if err != nil {
 				log.Error("failed to create answer id", "err", err.Error())
 				return res, err
@@ -143,12 +143,12 @@ func (p *BotsProcessor) Process(
 		return res, err
 	}
 
-	log.Info("got next state", "next", next.Node.State)
+	log.Info("got next state", "next", next.State)
 
 	res = append(res, mapBlockToMessage(next))
 
-	if next.Node.Type == value.Message {
-		log.Info("auto process message node", "next", next.Node.State)
+	if next.Type == value.Message {
+		log.Info("auto process message node", "next", next.State)
 		newRes, err := p.Process(ctx, botId, userId, ans)
 		if err != nil {
 			log.Error("failed to process message", "err", err.Error())
@@ -163,9 +163,9 @@ func (p *BotsProcessor) Process(
 }
 
 func mapBlockToMessage(block *entity.Block) dto.Message {
-	dtoOptions := make([]string, len(block.Node.Options))
+	dtoOptions := make([]string, len(block.Options))
 
-	for i, option := range block.Node.Options {
+	for i, option := range block.Options {
 		dtoOptions[i] = option.Text
 	}
 

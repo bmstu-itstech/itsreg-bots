@@ -99,8 +99,8 @@ func traverse(
 	colors := map[value.State]Color{}
 
 	for _, block := range blocks {
-		mBlocks[block.Node.State] = block
-		colors[block.Node.State] = White
+		mBlocks[block.State] = block
+		colors[block.State] = White
 	}
 
 	err := dfs(start, mBlocks, colors)
@@ -129,9 +129,9 @@ func dfs(
 		return ErrNodeNotFound
 	}
 
-	switch vertex.Node.Type {
+	switch vertex.Type {
 	case value.Selection:
-		for _, opt := range vertex.Node.Options {
+		for _, opt := range vertex.Options {
 			next := opt.Next
 			if next.IsNone() {
 				continue
@@ -148,7 +148,7 @@ func dfs(
 		}
 
 	case value.Message, value.Question:
-		next := vertex.Node.Default
+		next := vertex.Default
 		if !next.IsNone() {
 			if colors[next] == White {
 				err := dfs(next, vertices, colors)
