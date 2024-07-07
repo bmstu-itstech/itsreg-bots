@@ -1,10 +1,11 @@
-package service_test
+package application_test
 
 import (
 	"context"
 	"github.com/stretchr/testify/require"
+	"github.com/zhikh23/itsreg-bots/internal/application"
+	"github.com/zhikh23/itsreg-bots/internal/application/dto"
 	"github.com/zhikh23/itsreg-bots/internal/domain/entity"
-	"github.com/zhikh23/itsreg-bots/internal/domain/service"
 	"github.com/zhikh23/itsreg-bots/internal/domain/value"
 	ansmemory "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/answer/memory"
 	blockmemory "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/block/memory"
@@ -14,14 +15,14 @@ import (
 	"testing"
 )
 
-func TestService_Process(t *testing.T) {
+func TestBotsProcessor_Process(t *testing.T) {
 	var script []*entity.Block
 	ctx := context.Background()
 
 	botRepos := botmemory.NewMemoryBotRepository()
 	bot, err := entity.NewBot(value.UnknownBotId, "Example bot", "Example token", value.State(1))
 	require.NoError(t, err)
-	err = botRepos.Save(ctx, bot)
+	_, err = botRepos.Save(ctx, bot)
 	require.NoError(t, err)
 
 	node, err := value.NewQuestionNode(value.State(1), value.State(2))
@@ -42,13 +43,13 @@ func TestService_Process(t *testing.T) {
 
 	node, err = value.NewMessageNode(value.State(3), value.StateNone)
 	require.NoError(t, err)
-	block, err = entity.NewBlock(node, bot.Id, "Message 3", "Block 3")
+	block, err = entity.NewBlock(node, bot.Id, "MessageDto 3", "Block 3")
 	require.NoError(t, err)
 	script = append(script, block)
 
 	node, err = value.NewMessageNode(value.State(4), value.State(3))
 	require.NoError(t, err)
-	block, err = entity.NewBlock(node, bot.Id, "Message 4", "Block 4")
+	block, err = entity.NewBlock(node, bot.Id, "MessageDto 4", "Block 4")
 	require.NoError(t, err)
 	script = append(script, block)
 
@@ -67,7 +68,7 @@ func TestService_Process(t *testing.T) {
 
 	ansRepos := ansmemory.NewMemoryAnswerRepository()
 
-	proc := service.NewProcessor(
+	proc := application.NewProcessor(
 		slogdiscard.NewDiscardLogger(),
 		ansRepos, blockRepos, botRepos, prtRepos)
 
@@ -78,9 +79,9 @@ func TestService_Process(t *testing.T) {
 		prtId := value.ParticipantId{BotId: bot.Id, UserId: tempUserId}
 		ctx := context.Background()
 
-		res, err := proc.Process(ctx, bot.Id, tempUserId, "Any text")
+		res, err := proc.Process(ctx, uint64(bot.Id), uint64(tempUserId), "Any text")
 		require.NoError(t, err)
-		require.Equal(t, []service.Message{
+		require.Equal(t, []dto.Message{
 			{Text: "Block 1", Options: []string{}},
 		}, res)
 
@@ -103,9 +104,9 @@ func TestService_Process(t *testing.T) {
 		err = prtRepos.Save(ctx, prt)
 		require.NoError(t, err)
 
-		res, err := proc.Process(ctx, bot.Id, tempUserId, "Any text")
+		res, err := proc.Process(ctx, uint64(bot.Id), uint64(tempUserId), "Any text")
 		require.NoError(t, err)
-		require.Equal(t, []service.Message{
+		require.Equal(t, []dto.Message{
 			{Text: "Block 2", Options: []string{
 				"To 3", "To 4", "To 5",
 			}},
@@ -138,9 +139,9 @@ func TestService_Process(t *testing.T) {
 		err = prtRepos.Save(ctx, prt)
 		require.NoError(t, err)
 
-		res, err := proc.Process(ctx, bot.Id, tempUserId, "To 5")
+		res, err := proc.Process(ctx, uint64(bot.Id), uint64(tempUserId), "To 5")
 		require.NoError(t, err)
-		require.Equal(t, []service.Message{
+		require.Equal(t, []dto.Message{
 			{Text: "Block 5", Options: []string{}},
 		}, res)
 
@@ -171,9 +172,9 @@ func TestService_Process(t *testing.T) {
 		err = prtRepos.Save(ctx, prt)
 		require.NoError(t, err)
 
-		res, err := proc.Process(ctx, bot.Id, tempUserId, "To 4")
+		res, err := proc.Process(ctx, uint64(bot.Id), uint64(tempUserId), "To 4")
 		require.NoError(t, err)
-		require.Equal(t, []service.Message{
+		require.Equal(t, []dto.Message{
 			{Text: "Block 4", Options: []string{}},
 			{Text: "Block 3", Options: []string{}},
 		}, res)
@@ -207,7 +208,7 @@ func TestService_Process(t *testing.T) {
 		err = prtRepos.UpdateState(ctx, prtId, value.StateNone)
 		require.NoError(t, err)
 
-		res, err := proc.Process(ctx, bot.Id, tempUserId, "Any text")
+		res, err := proc.Process(ctx, uint64(bot.Id), uint64(tempUserId), "Any text")
 		require.NoError(t, err)
 		require.Empty(t, res)
 
@@ -230,7 +231,7 @@ func TestService_Process(t *testing.T) {
 		err = prtRepos.Save(ctx, prt)
 		require.NoError(t, err)
 
-		res, err := proc.Process(ctx, bot.Id, tempUserId, "Any text")
+		res, err := proc.Process(ctx, uint64(bot.Id), uint64(tempUserId), "Any text")
 		require.NoError(t, err)
 		require.NotEmpty(t, res)
 

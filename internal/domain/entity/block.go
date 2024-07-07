@@ -17,10 +17,6 @@ type Block struct {
 }
 
 func NewBlock(node value.Node, botId value.BotId, title string, text string) (*Block, error) {
-	if botId.IsUnknown() {
-		return nil, ErrInvalidBlock
-	}
-
 	if len(text) == 0 {
 		return nil, ErrInvalidBlock
 	}

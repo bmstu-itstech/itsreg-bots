@@ -12,6 +12,6 @@ var (
 )
 
 type BotRepository interface {
-	Save(context.Context, *entity.Bot) error
+	Save(context.Context, *entity.Bot) (value.BotId, error)
 	Bot(context.Context, value.BotId) (*entity.Bot, error)
 }

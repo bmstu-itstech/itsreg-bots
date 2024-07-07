@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/zhikh23/itsreg-bots/internal/application"
 	"github.com/zhikh23/itsreg-bots/internal/config"
-	"github.com/zhikh23/itsreg-bots/internal/presentation/grpc"
+	grpcapp "github.com/zhikh23/itsreg-bots/internal/presentation/grpc"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,7 +17,7 @@ func main() {
 		panic(err)
 	}
 
-	app := grpc.New(application.Logger, application.BotsAppService, cfg.Grpc.Port)
+	app := grpcapp.New(application.Logger, application.BotsAppService, cfg.Grpc.Port)
 
 	go func() {
 		app.MustRun()

@@ -19,8 +19,9 @@ func TestBotMemoryRepository_Save(t *testing.T) {
 		bot, err := entity.NewBot(0, "example bot", "example token", value.State(42))
 		require.NoError(t, err)
 
-		err = repos.Save(ctx, bot)
+		id, err := repos.Save(ctx, bot)
 		require.NoError(t, err)
+		require.NotZero(t, id)
 
 		got, ok := repos.m[bot.Id]
 		require.True(t, ok, "bot should be saved")
