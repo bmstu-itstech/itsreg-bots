@@ -4,6 +4,7 @@ go 1.21.6
 
 require (
 	github.com/fatih/color v1.17.0
+	github.com/gabrielmellooliveira/go-spec v0.0.0-20231001232514-4f0efe85b085
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/stretchr/testify v1.9.0

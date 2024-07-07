@@ -20,37 +20,14 @@ func BlockFromDto(dto Block, botId value.BotId) (*entity.Block, error) {
 		return nil, err
 	}
 
-	var node value.Node
+	options, err := OptionsFromDto(dto.Options)
+	if err != nil {
+		return nil, err
+	}
 
-	switch typ {
-	case value.Message:
-		node, err = value.NewMessageNode(value.State(dto.State), value.State(dto.Default))
-		if err != nil {
-			return nil, err
-		}
-		if len(dto.Options) > 0 {
-			return nil, value.ErrInvalidMessageNode
-		}
-	case value.Question:
-		node, err = value.NewQuestionNode(value.State(dto.State), value.State(dto.Default))
-		if err != nil {
-			return nil, err
-		}
-		if len(dto.Options) > 0 {
-			return nil, value.ErrInvalidQuestionNode
-		}
-	case value.Selection:
-		options, err := OptionsFromDto(dto.Options)
-		if err != nil {
-			return nil, err
-		}
-		node, err = value.NewSelectionNode(value.State(dto.State), options)
-		if err != nil {
-			return nil, err
-		}
-		if dto.Default != 0 {
-			return nil, value.ErrInvalidSelectionNode
-		}
+	node, err := value.NewNode(typ, value.State(dto.State), value.State(dto.Default), options)
+	if err != nil {
+		return nil, err
 	}
 
 	block, err := entity.NewBlock(node, botId, dto.Title, dto.Text)
