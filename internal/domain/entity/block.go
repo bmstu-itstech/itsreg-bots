@@ -10,7 +10,7 @@ var (
 )
 
 type Block struct {
-	Node  value.Node
+	value.Node
 	BotId value.BotId
 	Title string
 	Text  string

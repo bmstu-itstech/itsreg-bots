@@ -28,7 +28,7 @@ func (r *blockMemoryRepository) Save(
 ) error {
 	id := blockId{
 		botId: block.BotId,
-		state: block.Node.State,
+		state: block.State,
 	}
 
 	if _, ok := r.m[id]; ok {

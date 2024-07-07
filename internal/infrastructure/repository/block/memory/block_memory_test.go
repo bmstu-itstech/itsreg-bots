@@ -26,7 +26,7 @@ func TestBlockMemoryRepository_Save(t *testing.T) {
 
 		got, ok := repos.m[blockId{
 			botId: block.BotId,
-			state: block.Node.State,
+			state: block.State,
 		}]
 		require.True(t, ok)
 		require.Equal(t, *block, *got)
@@ -77,7 +77,7 @@ func TestBlockMemoryRepository_Block(t *testing.T) {
 	for _, block := range blocks {
 		id := blockId{
 			botId: block.BotId,
-			state: block.Node.State,
+			state: block.State,
 		}
 		repos.m[id] = block
 	}
