@@ -14,7 +14,7 @@ type Block struct {
 	Text    string
 }
 
-func BlockFromDto(dto Block) (*entity.Block, error) {
+func BlockFromDto(dto Block, botId value.BotId) (*entity.Block, error) {
 	typ, err := value.NewNodeType(dto.Type)
 	if err != nil {
 		return nil, err
@@ -48,9 +48,12 @@ func BlockFromDto(dto Block) (*entity.Block, error) {
 		if err != nil {
 			return nil, err
 		}
+		if dto.Default != 0 {
+			return nil, value.ErrInvalidSelectionNode
+		}
 	}
 
-	block, err := entity.NewBlock(node, value.UnknownBotId, dto.Title, dto.Text)
+	block, err := entity.NewBlock(node, botId, dto.Title, dto.Text)
 	if err != nil {
 		return nil, err
 	}
@@ -58,10 +61,10 @@ func BlockFromDto(dto Block) (*entity.Block, error) {
 	return block, nil
 }
 
-func BlocksFromDtos(dtos []Block) ([]*entity.Block, error) {
+func BlocksFromDtos(dtos []Block, botId value.BotId) ([]*entity.Block, error) {
 	blocks := make([]*entity.Block, len(dtos))
 	for i, dto := range dtos {
-		block, err := BlockFromDto(dto)
+		block, err := BlockFromDto(dto, botId)
 		if err != nil {
 			return nil, err
 		}

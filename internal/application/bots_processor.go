@@ -46,13 +46,9 @@ func (p *BotsProcessor) Process(
 
 	var res []dto.Message
 
-	log := p.log.With(
-		slog.String("op", op),
-		slog.Uint64("bot_id", botId),
-		slog.Uint64("user_id", userId),
-		slog.String("answer", ans))
+	log := p.log.With(slog.String("op", op))
 
-	log.Info("processing answer")
+	log.Info("processing answer", "bot_id", botId, "user_id", userId, "ans", ans)
 
 	prtId, err := value.NewParticipantId(value.BotId(botId), value.UserId(userId))
 	if err != nil {
@@ -95,7 +91,7 @@ func (p *BotsProcessor) Process(
 
 		block, err := p.blcRepo.Block(ctx, prtId.BotId, prt.Current)
 		if err != nil {
-			log.Error("failed to get block", "err", err.Error())
+			log.Error("failed to get block", "block", prt.Current, "err", err.Error())
 			return res, err
 		}
 

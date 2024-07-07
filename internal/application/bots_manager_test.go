@@ -87,7 +87,7 @@ func TestBotsManager_Create(t *testing.T) {
 		}
 
 		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
-		require.ErrorIs(t, err, entity.ErrInvalidBot)
+		require.ErrorIs(t, err, entity.ErrInvalidBotName)
 	})
 
 	t.Run("should return an error if bot token is empty", func(t *testing.T) {
@@ -117,7 +117,7 @@ func TestBotsManager_Create(t *testing.T) {
 		}
 
 		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
-		require.ErrorIs(t, err, entity.ErrInvalidBot)
+		require.ErrorIs(t, err, entity.ErrInvalidBotToken)
 	})
 
 	t.Run("should return an error if bot has a non-existent block", func(t *testing.T) {
@@ -132,7 +132,7 @@ func TestBotsManager_Create(t *testing.T) {
 
 		a := args{
 			name:  "example",
-			token: "",
+			token: "example token",
 			start: 1,
 			blocks: []dto.Block{
 				{
@@ -162,7 +162,7 @@ func TestBotsManager_Create(t *testing.T) {
 
 		a := args{
 			name:  "example",
-			token: "",
+			token: "example token",
 			start: 1,
 			blocks: []dto.Block{
 				{
@@ -226,7 +226,7 @@ func TestBotsManager_Create(t *testing.T) {
 
 		a := args{
 			name:  "example",
-			token: "",
+			token: "example token",
 			start: 1,
 			blocks: []dto.Block{
 				{
@@ -292,7 +292,7 @@ func TestBotsManager_Create(t *testing.T) {
 		}
 
 		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
-		require.ErrorIs(t, err, value.ErrInvalidNode)
+		require.ErrorIs(t, err, value.ErrInvalidMessageNode)
 	})
 
 	t.Run("should return an error if bot has invalid question block", func(t *testing.T) {
@@ -307,7 +307,7 @@ func TestBotsManager_Create(t *testing.T) {
 
 		a := args{
 			name:  "example",
-			token: "",
+			token: "example token",
 			start: 1,
 			blocks: []dto.Block{
 				{
@@ -335,7 +335,7 @@ func TestBotsManager_Create(t *testing.T) {
 		}
 
 		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
-		require.ErrorIs(t, err, value.ErrInvalidNode)
+		require.ErrorIs(t, err, value.ErrInvalidQuestionNode)
 	})
 
 	t.Run("should return an error if bot has invalid selection block", func(t *testing.T) {
@@ -350,12 +350,12 @@ func TestBotsManager_Create(t *testing.T) {
 
 		a := args{
 			name:  "example",
-			token: "",
+			token: "example token",
 			start: 1,
 			blocks: []dto.Block{
 				{
 					State:   1,
-					Type:    2,
+					Type:    3,
 					Default: 2, // <----- should be zero
 					Options: []dto.Option{
 						{
@@ -378,7 +378,7 @@ func TestBotsManager_Create(t *testing.T) {
 		}
 
 		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
-		require.ErrorIs(t, err, value.ErrInvalidNode)
+		require.ErrorIs(t, err, value.ErrInvalidSelectionNode)
 	})
 
 	t.Run("should return an error if bot has invalid selection option", func(t *testing.T) {
@@ -394,7 +394,7 @@ func TestBotsManager_Create(t *testing.T) {
 
 		a := args{
 			name:  "example",
-			token: "",
+			token: "example token",
 			start: 1,
 			blocks: []dto.Block{
 				{
@@ -414,7 +414,7 @@ func TestBotsManager_Create(t *testing.T) {
 		}
 
 		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
-		require.ErrorIs(t, err, value.ErrInvalidOption)
+		require.ErrorIs(t, err, value.ErrInvalidOptionNext)
 	})
 
 	t.Run("should return an error if bot has invalid block type", func(t *testing.T) {
@@ -429,7 +429,7 @@ func TestBotsManager_Create(t *testing.T) {
 
 		a := args{
 			name:  "example",
-			token: "",
+			token: "example token",
 			start: 1,
 			blocks: []dto.Block{
 				{
@@ -445,5 +445,39 @@ func TestBotsManager_Create(t *testing.T) {
 
 		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
 		require.ErrorIs(t, err, value.ErrInvalidNodeType)
+	})
+
+	t.Run("should create several bots", func(t *testing.T) {
+		ctx := context.Background()
+
+		botRepos := botmemory.NewMemoryBotRepository()
+		blcRepos := blockmemory.NewMemoryBlockRepository()
+
+		manager := application.NewBotsManager(
+			slogdiscard.NewDiscardLogger(),
+			botRepos, blcRepos)
+
+		a := args{
+			name:  "Bot 1",
+			token: "example token",
+			start: 1,
+			blocks: []dto.Block{
+				{
+					State:   1,
+					Type:    2,
+					Default: 0,
+					Options: []dto.Option{},
+					Title:   "Question 1",
+					Text:    "Block 1",
+				},
+			},
+		}
+
+		botId1, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
+		require.NoError(t, err)
+
+		botId2, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
+		require.NoError(t, err)
+		require.NotEqual(t, botId1, botId2)
 	})
 }
