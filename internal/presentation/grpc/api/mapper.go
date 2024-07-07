@@ -34,6 +34,8 @@ func blockToDto(block *botsv1.Block) dto.Block {
 		Type:    int(block.Type),
 		Default: block.Default,
 		Options: optionsToDtos(block.Options),
+		Title:   block.Title,
+		Text:    block.Text,
 	}
 }
 
