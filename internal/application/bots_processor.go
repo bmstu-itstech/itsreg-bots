@@ -1,15 +1,16 @@
-package service
+package application
 
 import (
 	"context"
 	"errors"
+	"github.com/zhikh23/itsreg-bots/internal/application/dto"
 	"github.com/zhikh23/itsreg-bots/internal/domain/entity"
 	"github.com/zhikh23/itsreg-bots/internal/domain/interfaces"
 	"github.com/zhikh23/itsreg-bots/internal/domain/value"
 	"log/slog"
 )
 
-type Processor struct {
+type BotsProcessor struct {
 	log     *slog.Logger
 	ansRepo interfaces.AnswerRepository
 	blcRepo interfaces.BlockRepository
@@ -17,7 +18,7 @@ type Processor struct {
 	prtRepo interfaces.ParticipantRepository
 }
 
-type Option func(*Processor) error
+type Option func(*BotsProcessor) error
 
 func NewProcessor(
 	log *slog.Logger,
@@ -25,9 +26,8 @@ func NewProcessor(
 	blcRepo interfaces.BlockRepository,
 	botRepo interfaces.BotRepository,
 	prtRepo interfaces.ParticipantRepository,
-) Processor {
-
-	return Processor{
+) *BotsProcessor {
+	return &BotsProcessor{
 		log:     log,
 		ansRepo: ansRepo,
 		blcRepo: blcRepo,
@@ -36,30 +36,25 @@ func NewProcessor(
 	}
 }
 
-type Message struct {
-	Text    string
-	Options []string
-}
-
-func (p *Processor) Process(
+func (p *BotsProcessor) Process(
 	ctx context.Context,
-	botId value.BotId,
-	userId value.UserId,
+	botId uint64,
+	userId uint64,
 	ans string,
-) ([]Message, error) {
-	const op = "processor.Service.Process"
+) ([]dto.Message, error) {
+	const op = "BotsProcessor.Process"
 
-	var res []Message
+	var res []dto.Message
 
 	log := p.log.With(
 		slog.String("op", op),
-		slog.Uint64("bot_id", uint64(botId)), // Make new slog Attr for IDs?
-		slog.Uint64("user_id", uint64(userId)),
+		slog.Uint64("bot_id", botId),
+		slog.Uint64("user_id", userId),
 		slog.String("answer", ans))
 
 	log.Info("processing answer")
 
-	prtId, err := value.NewParticipantId(botId, userId)
+	prtId, err := value.NewParticipantId(value.BotId(botId), value.UserId(userId))
 	if err != nil {
 		log.Error("invalid participant id", "err", err)
 		return nil, err
@@ -70,7 +65,7 @@ func (p *Processor) Process(
 	prt, err := p.prtRepo.Participant(ctx, prtId)
 	if err != nil {
 		if errors.Is(err, interfaces.ErrParticipantNotFound) {
-			b, err := p.botRepo.Bot(ctx, botId)
+			b, err := p.botRepo.Bot(ctx, prtId.BotId)
 			if err != nil {
 				log.Error("failed to get bot", "err", err)
 				return res, err
@@ -98,7 +93,7 @@ func (p *Processor) Process(
 			return res, nil
 		}
 
-		block, err := p.blcRepo.Block(ctx, botId, prt.Current)
+		block, err := p.blcRepo.Block(ctx, prtId.BotId, prt.Current)
 		if err != nil {
 			log.Error("failed to get block", "err", err)
 			return res, err
@@ -106,7 +101,7 @@ func (p *Processor) Process(
 
 		state, err = block.Node.Next(ans)
 		if errors.Is(err, value.ErrIncorrectAnswer) {
-			res = append(res, Message{
+			res = append(res, dto.Message{
 				Text:    "Некорректный ввод!",
 				Options: nil,
 			})
@@ -146,7 +141,7 @@ func (p *Processor) Process(
 
 	log.Info("processing state", "state", state)
 
-	next, err := p.blcRepo.Block(ctx, botId, state)
+	next, err := p.blcRepo.Block(ctx, prtId.BotId, state)
 	if err != nil {
 		log.Error("failed to get block", "err", err)
 		return res, err
@@ -171,14 +166,14 @@ func (p *Processor) Process(
 	return res, err
 }
 
-func mapBlockToMessage(block *entity.Block) Message {
+func mapBlockToMessage(block *entity.Block) dto.Message {
 	dtoOptions := make([]string, len(block.Node.Options))
 
 	for i, option := range block.Node.Options {
 		dtoOptions[i] = option.Text
 	}
 
-	return Message{
+	return dto.Message{
 		Text:    block.Text,
 		Options: dtoOptions,
 	}

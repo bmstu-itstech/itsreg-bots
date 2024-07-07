@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"github.com/zhikh23/itsreg-bots/internal/application"
+	"github.com/zhikh23/itsreg-bots/internal/domain/value"
 	botsv1 "github.com/zhikh23/itsreg-proto/gen/go/bots/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -22,7 +23,10 @@ func Register(
 }
 
 func (g *grpcApi) Process(ctx context.Context, req *botsv1.ProcessRequest) (*botsv1.ProcessResponse, error) {
-	messages, err := g.bots.Process(ctx, req.BotId, req.UserId, req.Text)
+	botId := value.BotId(req.BotId)
+	userId := value.UserId(req.UserId)
+
+	messages, err := g.bots.Process(ctx, botId, userId, req.Text)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

@@ -22,12 +22,12 @@ func NewMemoryBotRepository() interfaces.BotRepository {
 func (r *botMemoryRepository) Save(
 	_ context.Context,
 	bot *entity.Bot,
-) error {
+) (value.BotId, error) {
 	r.lastId++
 	bot.Id = r.lastId
 
 	r.m[bot.Id] = bot
-	return nil
+	return r.lastId, nil
 }
 
 func (r *botMemoryRepository) Bot(
