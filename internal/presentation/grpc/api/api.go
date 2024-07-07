@@ -26,12 +26,12 @@ func (g *grpcApi) Process(ctx context.Context, req *botsv1.ProcessRequest) (*bot
 	botId := value.BotId(req.BotId)
 	userId := value.UserId(req.UserId)
 
-	messages, err := g.bots.Process(ctx, botId, userId, req.Text)
+	messages, err := g.bots.Process(ctx, uint64(botId), uint64(userId), req.Text)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &botsv1.ProcessResponse{
-		Messages: messagesToDtos(messages),
+		Messages: messagesFromDtos(messages),
 	}, nil
 }
