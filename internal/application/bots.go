@@ -28,3 +28,13 @@ func (s *BotsService) Process(
 ) ([]dto.Message, error) {
 	return s.processor.Process(ctx, botId, userId, ans)
 }
+
+func (s *BotsService) Create(
+	ctx context.Context,
+	name string,
+	token string,
+	start uint64,
+	blocks []dto.Block,
+) (uint64, error) {
+	return s.manager.Create(ctx, name, token, start, blocks)
+}

@@ -1,12 +1,7 @@
 package entity
 
 import (
-	"errors"
 	"github.com/zhikh23/itsreg-bots/internal/domain/value"
-)
-
-var (
-	ErrInvalidParticipant = errors.New("invalid participant")
 )
 
 type Participant struct {
@@ -15,18 +10,6 @@ type Participant struct {
 }
 
 func NewParticipant(id value.ParticipantId, current value.State) (*Participant, error) {
-	if id.BotId.IsUnknown() {
-		return nil, ErrInvalidParticipant
-	}
-
-	if id.UserId.IsUnknown() {
-		return nil, ErrInvalidParticipant
-	}
-
-	if current.IsNone() {
-		return nil, ErrInvalidParticipant
-	}
-
 	return &Participant{
 		Id:      id,
 		Current: current,

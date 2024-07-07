@@ -6,7 +6,9 @@ import (
 )
 
 var (
-	ErrInvalidBot = errors.New("invalid bot")
+	ErrInvalidBotName       = errors.New("invalid bot name")
+	ErrInvalidBotToken      = errors.New("invalid bot token")
+	ErrInvalidBotStartState = errors.New("invalid bot start state")
 )
 
 type Bot struct {
@@ -18,15 +20,15 @@ type Bot struct {
 
 func NewBot(id value.BotId, name string, token string, start value.State) (*Bot, error) {
 	if len(name) == 0 {
-		return nil, ErrInvalidBot
+		return nil, ErrInvalidBotName
 	}
 
 	if len(token) == 0 {
-		return nil, ErrInvalidBot
+		return nil, ErrInvalidBotToken
 	}
 
 	if start.IsNone() {
-		return nil, ErrInvalidBot
+		return nil, ErrInvalidBotStartState
 	}
 
 	return &Bot{

@@ -29,7 +29,7 @@ func BlockFromDto(dto Block) (*entity.Block, error) {
 			return nil, err
 		}
 		if len(dto.Options) > 0 {
-			return nil, value.ErrInvalidNode
+			return nil, value.ErrInvalidMessageNode
 		}
 	case value.Question:
 		node, err = value.NewQuestionNode(value.State(dto.State), value.State(dto.Default))
@@ -37,7 +37,7 @@ func BlockFromDto(dto Block) (*entity.Block, error) {
 			return nil, err
 		}
 		if len(dto.Options) > 0 {
-			return nil, value.ErrInvalidNode
+			return nil, value.ErrInvalidQuestionNode
 		}
 	case value.Selection:
 		options, err := OptionsFromDto(dto.Options)

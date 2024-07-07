@@ -3,7 +3,8 @@ package value
 import "errors"
 
 var (
-	ErrInvalidOption = errors.New("invalid option")
+	ErrInvalidOptionText = errors.New("invalid option text")
+	ErrInvalidOptionNext = errors.New("invalid option next state")
 )
 
 type Option struct {
@@ -13,11 +14,11 @@ type Option struct {
 
 func NewOption(text string, next State) (Option, error) {
 	if len(text) == 0 {
-		return Option{}, ErrInvalidOption
+		return Option{}, ErrInvalidOptionText
 	}
 
 	if next.IsNone() {
-		return Option{}, ErrInvalidOption
+		return Option{}, ErrInvalidOptionNext
 	}
 
 	return Option{

@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	ErrInvalidAnswer = errors.New("invalid answer")
+	ErrInvalidAnswerValue = errors.New("invalid answer value")
 )
 
 type Answer struct {
@@ -16,7 +16,7 @@ type Answer struct {
 
 func NewAnswer(id value.AnswerId, value string) (*Answer, error) {
 	if len(value) == 0 {
-		return nil, ErrInvalidAnswer
+		return nil, ErrInvalidAnswerValue
 	}
 
 	return &Answer{

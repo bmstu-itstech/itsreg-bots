@@ -3,7 +3,8 @@ package value
 import "errors"
 
 var (
-	ErrInvalidParticipantId = errors.New("invalid participant ID")
+	ErrInvalidParticipantBotId  = errors.New("invalid participant bot id")
+	ErrInvalidParticipantUserId = errors.New("invalid participant user id")
 )
 
 type ParticipantId struct {
@@ -13,11 +14,11 @@ type ParticipantId struct {
 
 func NewParticipantId(botId BotId, userId UserId) (ParticipantId, error) {
 	if botId.IsUnknown() {
-		return ParticipantId{}, ErrInvalidParticipantId
+		return ParticipantId{}, ErrInvalidParticipantBotId
 	}
 
 	if userId.IsUnknown() {
-		return ParticipantId{}, ErrInvalidParticipantId
+		return ParticipantId{}, ErrInvalidParticipantUserId
 	}
 
 	return ParticipantId{

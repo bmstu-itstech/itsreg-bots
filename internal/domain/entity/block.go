@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	ErrInvalidBlock = errors.New("invalid block")
+	ErrInvalidBlockText = errors.New("invalid block text")
 )
 
 type Block struct {
@@ -18,7 +18,7 @@ type Block struct {
 
 func NewBlock(node value.Node, botId value.BotId, title string, text string) (*Block, error) {
 	if len(text) == 0 {
-		return nil, ErrInvalidBlock
+		return nil, ErrInvalidBlockText
 	}
 
 	return &Block{

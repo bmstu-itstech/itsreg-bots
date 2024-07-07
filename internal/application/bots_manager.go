@@ -50,32 +50,32 @@ func (m *BotsManager) Create(
 
 	eBlocks, err := dto.BlocksFromDtos(blocks)
 	if err != nil {
-		log.Error("failed to convert blocks from dto", "err", err)
+		log.Error("failed to convert blocks from dto", "err", err.Error())
 		return 0, err
 	}
 
 	err = traverse(value.State(start), eBlocks)
 	if err != nil {
-		log.Error("invalid bot's script", "err", err)
+		log.Error("invalid bot's script", "err", err.Error())
 		return 0, err
 	}
 
 	bot, err := entity.NewBot(value.UnknownBotId, name, token, value.State(start))
 	if err != nil {
-		log.Error("invalid bot's info", "err", err)
+		log.Error("invalid bot's info", "err", err.Error())
 		return 0, err
 	}
 
 	botId, err := m.botRepo.Save(ctx, bot)
 	if err != nil {
-		log.Error("failed to save bot", "err", err)
+		log.Error("failed to save bot", "err", err.Error())
 		return 0, err
 	}
 
 	for _, block := range eBlocks {
 		err = m.blcRepo.Save(ctx, block)
 		if err != nil {
-			log.Error("failed to save block", "err", err)
+			log.Error("failed to save block", "err", err.Error())
 			return 0, err
 		}
 	}
