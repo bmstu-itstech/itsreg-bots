@@ -1,11 +1,11 @@
 package api
 
 import (
-	"github.com/zhikh23/itsreg-bots/internal/application"
+	"github.com/zhikh23/itsreg-bots/internal/application/dto"
 	botsv1 "github.com/zhikh23/itsreg-proto/gen/go/bots/proto"
 )
 
-func messageToDto(msg application.MessageDto) *botsv1.Message {
+func messageFromDto(msg dto.Message) *botsv1.Message {
 	options := make([]*botsv1.Button, len(msg.Options))
 
 	for i, opt := range msg.Options {
@@ -18,11 +18,11 @@ func messageToDto(msg application.MessageDto) *botsv1.Message {
 	}
 }
 
-func messagesToDtos(msgs []application.MessageDto) []*botsv1.Message {
+func messagesFromDtos(msgs []dto.Message) []*botsv1.Message {
 	res := make([]*botsv1.Message, len(msgs))
 
 	for i, m := range msgs {
-		res[i] = messageToDto(m)
+		res[i] = messageFromDto(m)
 	}
 
 	return res
