@@ -3,3 +3,9 @@ grpc:
   host: localhost
   port: 40000
   timeout: 10s
+postgres:
+  host: localhost
+  port: 50000
+  user: bots-service
+  password: s3cr3t
+  dbname: itsreg
