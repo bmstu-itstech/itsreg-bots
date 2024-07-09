@@ -5,8 +5,8 @@ import (
 	"errors"
 	"github.com/zhikh23/itsreg-bots/internal/application/dto"
 	"github.com/zhikh23/itsreg-bots/internal/domain/entity"
-	"github.com/zhikh23/itsreg-bots/internal/domain/interfaces"
 	"github.com/zhikh23/itsreg-bots/internal/domain/value"
+	interfaces2 "github.com/zhikh23/itsreg-bots/internal/infrastructure/interfaces"
 	"log/slog"
 )
 
@@ -18,14 +18,14 @@ var (
 
 type BotsManager struct {
 	log     *slog.Logger
-	botRepo interfaces.BotRepository
-	blcRepo interfaces.BlockRepository
+	botRepo interfaces2.BotRepository
+	blcRepo interfaces2.BlockRepository
 }
 
 func NewBotsManager(
 	logger *slog.Logger,
-	botRepo interfaces.BotRepository,
-	blcRepo interfaces.BlockRepository,
+	botRepo interfaces2.BotRepository,
+	blcRepo interfaces2.BlockRepository,
 ) *BotsManager {
 	return &BotsManager{
 		log:     logger,

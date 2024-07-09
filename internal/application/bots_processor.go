@@ -5,27 +5,27 @@ import (
 	"errors"
 	"github.com/zhikh23/itsreg-bots/internal/application/dto"
 	"github.com/zhikh23/itsreg-bots/internal/domain/entity"
-	"github.com/zhikh23/itsreg-bots/internal/domain/interfaces"
 	"github.com/zhikh23/itsreg-bots/internal/domain/value"
+	interfaces2 "github.com/zhikh23/itsreg-bots/internal/infrastructure/interfaces"
 	"log/slog"
 )
 
 type BotsProcessor struct {
 	log     *slog.Logger
-	ansRepo interfaces.AnswerRepository
-	blcRepo interfaces.BlockRepository
-	botRepo interfaces.BotRepository
-	prtRepo interfaces.ParticipantRepository
+	ansRepo interfaces2.AnswerRepository
+	blcRepo interfaces2.BlockRepository
+	botRepo interfaces2.BotRepository
+	prtRepo interfaces2.ParticipantRepository
 }
 
 type Option func(*BotsProcessor) error
 
 func NewProcessor(
 	log *slog.Logger,
-	ansRepo interfaces.AnswerRepository,
-	blcRepo interfaces.BlockRepository,
-	botRepo interfaces.BotRepository,
-	prtRepo interfaces.ParticipantRepository,
+	ansRepo interfaces2.AnswerRepository,
+	blcRepo interfaces2.BlockRepository,
+	botRepo interfaces2.BotRepository,
+	prtRepo interfaces2.ParticipantRepository,
 ) *BotsProcessor {
 	return &BotsProcessor{
 		log:     log,
@@ -60,7 +60,7 @@ func (p *BotsProcessor) Process(
 
 	prt, err := p.prtRepo.Participant(ctx, prtId)
 	if err != nil {
-		if errors.Is(err, interfaces.ErrParticipantNotFound) {
+		if errors.Is(err, interfaces2.ErrParticipantNotFound) {
 			b, err := p.botRepo.Bot(ctx, prtId.BotId)
 			if err != nil {
 				log.Error("failed to get bot", "err", err.Error())

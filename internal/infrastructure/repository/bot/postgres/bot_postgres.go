@@ -5,11 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/zhikh23/itsreg-bots/internal/infrastructure/interfaces"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/jmoiron/sqlx"
 	"github.com/zhikh23/itsreg-bots/internal/domain/entity"
-	"github.com/zhikh23/itsreg-bots/internal/domain/interfaces"
 	"github.com/zhikh23/itsreg-bots/internal/domain/value"
 )
 
