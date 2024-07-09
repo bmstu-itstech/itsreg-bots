@@ -43,13 +43,13 @@ func TestBotsProcessor_Process(t *testing.T) {
 
 	node, err = value.NewMessageNode(value.State(3), value.StateNone)
 	require.NoError(t, err)
-	block, err = entity.NewBlock(node, bot.Id, "MessageDto 3", "Block 3")
+	block, err = entity.NewBlock(node, bot.Id, "Message 3", "Block 3")
 	require.NoError(t, err)
 	script = append(script, block)
 
 	node, err = value.NewMessageNode(value.State(4), value.State(3))
 	require.NoError(t, err)
-	block, err = entity.NewBlock(node, bot.Id, "MessageDto 4", "Block 4")
+	block, err = entity.NewBlock(node, bot.Id, "Message 4", "Block 4")
 	require.NoError(t, err)
 	script = append(script, block)
 
@@ -242,5 +242,51 @@ func TestBotsProcessor_Process(t *testing.T) {
 		ans, err := ansRepos.AnswersFrom(ctx, prtId)
 		require.NoError(t, err)
 		require.Empty(t, ans)
+	})
+
+	t.Run("should process question and selection blocks", func(t *testing.T) {
+		tempUserId++
+		prtId := value.ParticipantId{BotId: bot.Id, UserId: tempUserId}
+		ctx := context.Background()
+
+		prt, err := entity.NewParticipant(prtId, value.State(1))
+		require.NoError(t, err)
+		err = prtRepos.Save(ctx, prt)
+		require.NoError(t, err)
+
+		res, err := proc.Process(ctx, uint64(bot.Id), uint64(tempUserId), "Any text")
+		require.NoError(t, err)
+		require.Equal(t, []dto.Message{
+			{Text: "Block 2", Options: []string{
+				"To 3", "To 4", "To 5",
+			}},
+		}, res)
+
+		res, err = proc.Process(ctx, uint64(bot.Id), uint64(tempUserId), "To 3")
+		require.NoError(t, err)
+		require.Equal(t, []dto.Message{
+			{Text: "Block 3", Options: []string{}},
+		}, res)
+
+		ans, err := ansRepos.AnswersFrom(ctx, prtId)
+		require.NoError(t, err)
+		require.NotEmpty(t, ans)
+		exp := []*entity.Answer{
+			{
+				Id: value.AnswerId{
+					ParticipantId: prtId,
+					State:         value.State(1),
+				},
+				Value: "Any text",
+			},
+			{
+				Id: value.AnswerId{
+					ParticipantId: prtId,
+					State:         value.State(2),
+				},
+				Value: "To 3",
+			},
+		}
+		require.ElementsMatch(t, exp, ans)
 	})
 }

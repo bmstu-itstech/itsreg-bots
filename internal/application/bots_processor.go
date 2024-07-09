@@ -159,7 +159,7 @@ func (p *BotsProcessor) Process(
 
 	log.Info("end processing block", "state", state)
 
-	return res, err
+	return res, nil
 }
 
 func mapBlockToMessage(block *entity.Block) dto.Message {
