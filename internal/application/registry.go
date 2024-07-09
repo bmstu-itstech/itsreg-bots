@@ -1,12 +1,14 @@
 package application
 
 import (
+	botmemory "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/bot/memory"
+	"log/slog"
+
 	"github.com/zhikh23/itsreg-bots/internal/config"
 	ansmemory "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/answer/memory"
 	blockmemory "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/block/memory"
-	botmemory "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/bot/memory"
+	_ "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/bot/memory"
 	prtmemory "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/participant/memory"
-	"log/slog"
 )
 
 var (
@@ -17,23 +19,31 @@ var (
 func Init(cfg *config.Config) error {
 	Logger = setupLogger(cfg.Env)
 
-	memoryAnswerRepos := ansmemory.NewMemoryAnswerRepository()
-	memoryBlockRepos := blockmemory.NewMemoryBlockRepository()
-	memoryBotRepos := botmemory.NewMemoryBotRepository()
-	memoryPrtRepos := prtmemory.NewMemoryParticipantRepository()
+	answerRepos := ansmemory.NewMemoryAnswerRepository()
+	blockRepos := blockmemory.NewMemoryBlockRepository()
+	prtRepos := prtmemory.NewMemoryParticipantRepository()
+	botRepos := botmemory.NewMemoryBotRepository()
+
+	//postgresBotRepos, err := botpostgres.NewPostgresBotRepository(endpoint.PostgresConnectionString(
+	//	cfg.Postgres.Host, fmt.Sprint(cfg.Postgres.Port), cfg.Postgres.User, cfg.Postgres.Password,
+	//	cfg.Postgres.DbName, endpoint.SslModeDisabled,
+	//))
+	//if err != nil {
+	//	return err
+	//}
 
 	botsProcessorService := NewProcessor(
 		Logger,
-		memoryAnswerRepos,
-		memoryBlockRepos,
-		memoryBotRepos,
-		memoryPrtRepos,
+		answerRepos,
+		blockRepos,
+		botRepos,
+		prtRepos,
 	)
 
 	botsManagerService := NewBotsManager(
 		Logger,
-		memoryBotRepos,
-		memoryBlockRepos,
+		botRepos,
+		blockRepos,
 	)
 
 	BotsAppService = NewBotsService(

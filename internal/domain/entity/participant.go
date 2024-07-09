@@ -15,7 +15,3 @@ func NewParticipant(id value.ParticipantId, current value.State) (*Participant, 
 		Current: current,
 	}, nil
 }
-
-func (p *Participant) SwitchTo(node value.Node) {
-	p.Current = node.State
-}

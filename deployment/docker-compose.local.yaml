@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15.3-alpine3.18
+    container_name: itsreg-postgres
+    command: postgres
+    ports:
+      - "50000:5432"
+    environment:
+      POSTGRES_DB: itsreg
+      POSTGRES_PASSWORD: s3cr3t
+      POSTGRES_USER: bots-service
+    healthcheck:
+      test: pg_isready --username "bots-service" --dbname "itsreg"
+      interval: 1s
+      retries: 5
+      timeout: 5s
