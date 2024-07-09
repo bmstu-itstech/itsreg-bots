@@ -83,6 +83,25 @@ func (m *BotsManager) Create(
 	return uint64(botId), nil
 }
 
+func (m *BotsManager) Token(
+	ctx context.Context,
+	botId uint64,
+) (string, error) {
+	const op = "BotsManager.Token"
+
+	log := m.log.With(
+		slog.String("op", op))
+
+	log.Info("processing request for token", "botId", botId)
+
+	bot, err := m.botRepo.Bot(ctx, value.BotId(botId))
+	if err != nil {
+		return "", err
+	}
+
+	return bot.Token, nil
+}
+
 type Color int
 
 const (
