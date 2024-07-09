@@ -9,12 +9,14 @@ func messageFromDto(msg dto.Message) *botsv1.Message {
 	options := make([]*botsv1.MessageOption, len(msg.Options))
 
 	for i, opt := range msg.Options {
-		options[i].Text = opt
+		options[i] = &botsv1.MessageOption{
+			Text: opt,
+		}
 	}
 
 	return &botsv1.Message{
 		Text:    msg.Text,
-		Buttons: options,
+		Options: options,
 	}
 }
 
