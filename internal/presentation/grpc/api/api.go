@@ -2,7 +2,9 @@ package api
 
 import (
 	"context"
+	"errors"
 	"github.com/zhikh23/itsreg-bots/internal/application"
+	"github.com/zhikh23/itsreg-bots/internal/domain/interfaces"
 	"github.com/zhikh23/itsreg-bots/internal/domain/value"
 	botsv1 "github.com/zhikh23/itsreg-proto/gen/go/bots"
 	"google.golang.org/grpc"
@@ -47,4 +49,20 @@ func (a *grpcApi) Process(ctx context.Context, req *botsv1.ProcessRequest) (*bot
 	return &botsv1.ProcessResponse{
 		Messages: messagesFromDtos(messages),
 	}, nil
+}
+
+func (a *grpcApi) GetToken(ctx context.Context, req *botsv1.TokenRequest) (*botsv1.TokenResponse, error) {
+	botId := value.BotId(req.BotId)
+
+	token, err := a.bots.Token(ctx, uint64(botId))
+	if err != nil {
+		if errors.Is(err, interfaces.ErrBotNotFound) {
+			return nil, status.Errorf(codes.NotFound, "bot not found")
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get token: %v", err)
+	}
+
+	return &botsv1.TokenResponse{
+		Token: token,
+	}, err
 }

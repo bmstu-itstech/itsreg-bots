@@ -38,3 +38,10 @@ func (s *BotsService) Create(
 ) (uint64, error) {
 	return s.manager.Create(ctx, name, token, start, blocks)
 }
+
+func (s *BotsService) Token(
+	ctx context.Context,
+	botId uint64,
+) (string, error) {
+	return s.manager.Token(ctx, botId)
+}

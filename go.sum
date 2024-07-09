@@ -160,10 +160,8 @@ github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9de
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yusufpapurcu/wmi v1.2.3 h1:E1ctvB7uKFMOJw3fdOW32DwGE9I7t++CRUEMKvFoFiw=
 github.com/yusufpapurcu/wmi v1.2.3/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQmPyzfmi0=
-github.com/zhikh23/itsreg-proto v0.1.5 h1:+8DHrod8k7jga+ZhvhkaUtnoMylnU1lSyQpdfMw6IaA=
-github.com/zhikh23/itsreg-proto v0.1.5/go.mod h1:Ss+PfCCRMNz/Dpp2tPanEgZkBxGgJU2Sv6JsfgatjTo=
-github.com/zhikh23/pgconn v1.2.1 h1:Rxix9OF2Ey7PUgV8rog2Y1FEDo5n9QkhLsgRnVyw7ro=
-github.com/zhikh23/pgconn v1.2.1/go.mod h1:wwLD4m2tTfg8fYfUfBLM4qV82XWksFOEdjZAtNuGMoQ=
+github.com/zhikh23/itsreg-proto v0.1.7 h1:dpqbQFMRtw1cVNA39Erm6QNPcg8Mq9zdVaHR4AOMbSw=
+github.com/zhikh23/itsreg-proto v0.1.7/go.mod h1:Ss+PfCCRMNz/Dpp2tPanEgZkBxGgJU2Sv6JsfgatjTo=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 h1:jq9TW8u3so/bN+JPT166wjOI6/vQPF6Xe7nMNIltagk=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0/go.mod h1:p8pYQP+m5XfbZm9fxtSKAbM6oIllS7s2AfxrChvc7iw=
 go.opentelemetry.io/otel v1.24.0 h1:0LAOdjNmQeSTzGBzduGe/rU4tZhMwL5rWgtp9Ku5Jfo=

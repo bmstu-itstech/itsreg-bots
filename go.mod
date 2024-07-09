@@ -10,8 +10,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.32.0
-	github.com/zhikh23/itsreg-proto v0.1.5
-	github.com/zhikh23/pgconn v1.2.1
+	github.com/zhikh23/itsreg-proto v0.1.7
 	google.golang.org/grpc v1.65.0
 )
 
