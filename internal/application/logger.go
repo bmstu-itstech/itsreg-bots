@@ -1,7 +1,7 @@
 package application
 
 import (
-	"github.com/zhikh23/itsreg-bots/pkg/logger/handlers/slogpretty"
+	"github.com/bmstu-itstech/itsreg-bots/pkg/logger/handlers/slogpretty"
 	"log/slog"
 	"os"
 )

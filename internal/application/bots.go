@@ -2,7 +2,7 @@ package application
 
 import (
 	"context"
-	"github.com/zhikh23/itsreg-bots/internal/application/dto"
+	"github.com/bmstu-itstech/itsreg-bots/internal/application/dto"
 )
 
 type BotsService struct {

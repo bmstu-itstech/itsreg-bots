@@ -2,14 +2,14 @@ package application_test
 
 import (
 	"context"
+	"github.com/bmstu-itstech/itsreg-bots/internal/application"
+	"github.com/bmstu-itstech/itsreg-bots/internal/application/dto"
+	"github.com/bmstu-itstech/itsreg-bots/internal/domain/entity"
+	"github.com/bmstu-itstech/itsreg-bots/internal/domain/value"
+	blockmemory "github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/repository/block/memory"
+	botmemory "github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/repository/bot/memory"
+	"github.com/bmstu-itstech/itsreg-bots/pkg/logger/handlers/slogdiscard"
 	"github.com/stretchr/testify/require"
-	"github.com/zhikh23/itsreg-bots/internal/application"
-	"github.com/zhikh23/itsreg-bots/internal/application/dto"
-	"github.com/zhikh23/itsreg-bots/internal/domain/entity"
-	"github.com/zhikh23/itsreg-bots/internal/domain/value"
-	blockmemory "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/block/memory"
-	botmemory "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/bot/memory"
-	"github.com/zhikh23/itsreg-bots/pkg/logger/handlers/slogdiscard"
 	"testing"
 )
 

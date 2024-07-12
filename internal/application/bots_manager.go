@@ -3,10 +3,10 @@ package application
 import (
 	"context"
 	"errors"
-	"github.com/zhikh23/itsreg-bots/internal/application/dto"
-	"github.com/zhikh23/itsreg-bots/internal/domain/entity"
-	"github.com/zhikh23/itsreg-bots/internal/domain/value"
-	interfaces2 "github.com/zhikh23/itsreg-bots/internal/infrastructure/interfaces"
+	"github.com/bmstu-itstech/itsreg-bots/internal/application/dto"
+	"github.com/bmstu-itstech/itsreg-bots/internal/domain/entity"
+	"github.com/bmstu-itstech/itsreg-bots/internal/domain/value"
+	interfaces2 "github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/interfaces"
 	"log/slog"
 )
 

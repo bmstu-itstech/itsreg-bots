@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/zhikh23/itsreg-bots/internal/application"
-	"github.com/zhikh23/itsreg-bots/internal/config"
-	grpcapp "github.com/zhikh23/itsreg-bots/internal/presentation/grpc"
+	"github.com/bmstu-itstech/itsreg-bots/internal/application"
+	"github.com/bmstu-itstech/itsreg-bots/internal/config"
+	grpcapp "github.com/bmstu-itstech/itsreg-bots/internal/presentation/grpc"
 	"os"
 	"os/signal"
 	"syscall"
