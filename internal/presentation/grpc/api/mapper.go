@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/zhikh23/itsreg-bots/internal/application/dto"
+	"github.com/bmstu-itstech/itsreg-bots/internal/application/dto"
 	botsv1 "github.com/zhikh23/itsreg-proto/gen/go/bots"
 )
 

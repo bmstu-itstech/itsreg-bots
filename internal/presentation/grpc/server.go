@@ -3,10 +3,10 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"github.com/bmstu-itstech/itsreg-bots/internal/application"
+	"github.com/bmstu-itstech/itsreg-bots/internal/presentation/grpc/api"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
-	"github.com/zhikh23/itsreg-bots/internal/application"
-	"github.com/zhikh23/itsreg-bots/internal/presentation/grpc/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"

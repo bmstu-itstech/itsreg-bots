@@ -1,4 +1,4 @@
-module github.com/zhikh23/itsreg-bots
+module github.com/bmstu-itstech/itsreg-bots
 
 go 1.21.6
 

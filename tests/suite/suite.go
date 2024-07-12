@@ -2,7 +2,7 @@ package suite
 
 import (
 	"context"
-	"github.com/zhikh23/itsreg-bots/internal/config"
+	"github.com/bmstu-itstech/itsreg-bots/internal/config"
 	botsv1 "github.com/zhikh23/itsreg-proto/gen/go/bots"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

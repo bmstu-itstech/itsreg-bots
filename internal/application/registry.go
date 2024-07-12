@@ -1,14 +1,14 @@
 package application
 
 import (
-	botmemory "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/bot/memory"
+	botmemory "github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/repository/bot/memory"
 	"log/slog"
 
-	"github.com/zhikh23/itsreg-bots/internal/config"
-	ansmemory "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/answer/memory"
-	blockmemory "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/block/memory"
-	_ "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/bot/memory"
-	prtmemory "github.com/zhikh23/itsreg-bots/internal/infrastructure/repository/participant/memory"
+	"github.com/bmstu-itstech/itsreg-bots/internal/config"
+	ansmemory "github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/repository/answer/memory"
+	blockmemory "github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/repository/block/memory"
+	_ "github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/repository/bot/memory"
+	prtmemory "github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/repository/participant/memory"
 )
 
 var (

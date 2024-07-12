@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"github.com/zhikh23/itsreg-bots/internal/domain/value"
+	"github.com/bmstu-itstech/itsreg-bots/internal/domain/value"
 )
 
 type Participant struct {

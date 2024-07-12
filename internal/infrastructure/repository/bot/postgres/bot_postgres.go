@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/zhikh23/itsreg-bots/internal/infrastructure/interfaces"
+	"github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/interfaces"
 
+	"github.com/bmstu-itstech/itsreg-bots/internal/domain/entity"
+	"github.com/bmstu-itstech/itsreg-bots/internal/domain/value"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/jmoiron/sqlx"
-	"github.com/zhikh23/itsreg-bots/internal/domain/entity"
-	"github.com/zhikh23/itsreg-bots/internal/domain/value"
 )
 
 type botPostgresRepository struct {

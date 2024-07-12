@@ -2,10 +2,10 @@ package postgres
 
 import (
 	"context"
+	"github.com/bmstu-itstech/itsreg-bots/internal/domain/entity"
+	"github.com/bmstu-itstech/itsreg-bots/internal/domain/value"
 	"github.com/stretchr/testify/require"
 	pgcontainer "github.com/testcontainers/testcontainers-go/modules/postgres"
-	"github.com/zhikh23/itsreg-bots/internal/domain/entity"
-	"github.com/zhikh23/itsreg-bots/internal/domain/value"
 	"log"
 	"testing"
 )

@@ -2,9 +2,9 @@ package memory
 
 import (
 	"context"
-	"github.com/zhikh23/itsreg-bots/internal/domain/entity"
-	"github.com/zhikh23/itsreg-bots/internal/domain/value"
-	"github.com/zhikh23/itsreg-bots/internal/infrastructure/interfaces"
+	"github.com/bmstu-itstech/itsreg-bots/internal/domain/entity"
+	"github.com/bmstu-itstech/itsreg-bots/internal/domain/value"
+	"github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/interfaces"
 )
 
 type answerMemoryRepository struct {
