@@ -2,8 +2,8 @@ package tests
 
 import (
 	"github.com/bmstu-itstech/itsreg-bots/tests/suite"
+	pb "github.com/bmstu-itstech/itsreg-proto/gen/go/bots"
 	"github.com/stretchr/testify/require"
-	pb "github.com/zhikh23/itsreg-proto/gen/go/bots"
 	"testing"
 )
 
