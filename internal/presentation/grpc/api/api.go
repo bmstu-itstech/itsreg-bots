@@ -6,7 +6,7 @@ import (
 	"github.com/bmstu-itstech/itsreg-bots/internal/application"
 	"github.com/bmstu-itstech/itsreg-bots/internal/domain/value"
 	"github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/interfaces"
-	botsv1 "github.com/zhikh23/itsreg-proto/gen/go/bots"
+	botsv1 "github.com/bmstu-itstech/itsreg-proto/gen/go/bots"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
