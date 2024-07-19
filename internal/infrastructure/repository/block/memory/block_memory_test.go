@@ -10,9 +10,13 @@ import (
 )
 
 func TestBlockMemoryRepository_Save(t *testing.T) {
+	t.Parallel()
+
 	t.Run("should save a block", func(t *testing.T) {
+		t.Parallel()
+
 		ctx := context.Background()
-		repos := blockMemoryRepository{
+		repos := BlockMemoryRepository{
 			m: map[blockId]*entity.Block{},
 		}
 
@@ -33,8 +37,10 @@ func TestBlockMemoryRepository_Save(t *testing.T) {
 	})
 
 	t.Run("should return error when answer already exists", func(t *testing.T) {
+		t.Parallel()
+
 		ctx := context.Background()
-		repos := blockMemoryRepository{
+		repos := BlockMemoryRepository{
 			m: map[blockId]*entity.Block{},
 		}
 
@@ -57,6 +63,8 @@ func TestBlockMemoryRepository_Save(t *testing.T) {
 }
 
 func TestBlockMemoryRepository_Block(t *testing.T) {
+	t.Parallel()
+
 	var blocks []*entity.Block
 
 	const botId = value.BotId(37)
@@ -71,7 +79,7 @@ func TestBlockMemoryRepository_Block(t *testing.T) {
 	require.NoError(t, err)
 	blocks = append(blocks, block)
 
-	repos := blockMemoryRepository{
+	repos := BlockMemoryRepository{
 		m: map[blockId]*entity.Block{},
 	}
 	for _, block := range blocks {
@@ -83,6 +91,7 @@ func TestBlockMemoryRepository_Block(t *testing.T) {
 	}
 
 	t.Run("should find block", func(t *testing.T) {
+		t.Parallel()
 		ctx := context.Background()
 
 		got, err := repos.Block(ctx, botId, value.State(2))
@@ -92,6 +101,7 @@ func TestBlockMemoryRepository_Block(t *testing.T) {
 	})
 
 	t.Run("should return error when block does not exists", func(t *testing.T) {
+		t.Parallel()
 		ctx := context.Background()
 
 		_, err := repos.Block(ctx, botId, value.State(3))

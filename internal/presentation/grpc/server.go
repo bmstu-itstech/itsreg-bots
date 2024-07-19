@@ -24,7 +24,7 @@ type Server struct {
 // New creates new gRPC server.
 func New(
 	log *slog.Logger,
-	bots *application.BotsService,
+	app *application.App,
 	port int,
 ) *Server {
 	loggingOpts := []logging.Option{
@@ -46,7 +46,7 @@ func New(
 		logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...),
 	))
 
-	api.Register(grpcServer, bots)
+	api.Register(grpcServer, app)
 	reflection.Register(grpcServer)
 
 	return &Server{

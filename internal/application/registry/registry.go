@@ -1,4 +1,4 @@
-package application
+package registry
 
 import (
 	"context"
@@ -16,34 +16,34 @@ var (
 	ErrNodeNotFound     = errors.New("node not found")
 )
 
-type BotsManager struct {
+type Registry struct {
 	log     *slog.Logger
 	botRepo interfaces2.BotRepository
 	blcRepo interfaces2.BlockRepository
 }
 
-func NewBotsManager(
+func New(
 	logger *slog.Logger,
 	botRepo interfaces2.BotRepository,
 	blcRepo interfaces2.BlockRepository,
-) *BotsManager {
-	return &BotsManager{
+) *Registry {
+	return &Registry{
 		log:     logger,
 		botRepo: botRepo,
 		blcRepo: blcRepo,
 	}
 }
 
-func (m *BotsManager) Create(
+func (r *Registry) Create(
 	ctx context.Context,
 	name string,
 	token string,
 	start uint64,
 	blocks []dto.Block,
 ) (uint64, error) {
-	const op = "BotsManager.Create"
+	const op = "Registry.Create"
 
-	log := m.log.With(
+	log := r.log.With(
 		slog.String("op", op))
 
 	log.Info("processing create bot")
@@ -54,7 +54,7 @@ func (m *BotsManager) Create(
 		return 0, err
 	}
 
-	botId, err := m.botRepo.Save(ctx, bot)
+	botId, err := r.botRepo.Save(ctx, bot)
 	if err != nil {
 		log.Error("failed to save bot", "err", err.Error())
 		return 0, err
@@ -73,7 +73,7 @@ func (m *BotsManager) Create(
 	}
 
 	for _, block := range eBlocks {
-		err = m.blcRepo.Save(ctx, block)
+		err = r.blcRepo.Save(ctx, block)
 		if err != nil {
 			log.Error("failed to save block", "err", err.Error())
 			return 0, err
@@ -83,18 +83,18 @@ func (m *BotsManager) Create(
 	return uint64(botId), nil
 }
 
-func (m *BotsManager) Token(
+func (r *Registry) Token(
 	ctx context.Context,
 	botId uint64,
 ) (string, error) {
-	const op = "BotsManager.Token"
+	const op = "Registry.Token"
 
-	log := m.log.With(
+	log := r.log.With(
 		slog.String("op", op))
 
 	log.Info("processing request for token", "botId", botId)
 
-	bot, err := m.botRepo.Bot(ctx, value.BotId(botId))
+	bot, err := r.botRepo.Bot(ctx, value.BotId(botId))
 	if err != nil {
 		return "", err
 	}

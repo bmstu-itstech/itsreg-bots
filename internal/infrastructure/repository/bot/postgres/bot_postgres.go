@@ -20,7 +20,6 @@ type botPostgresRepository struct {
 type RepositoryOption func(context.Context, *botPostgresRepository) error
 
 func NewPostgresBotRepository(url string) (interfaces.BotRepository, error) {
-	fmt.Println(url)
 	db, err := sqlx.Connect("postgres", url)
 	if err != nil {
 		return nil, err
@@ -42,9 +41,11 @@ func (r *botPostgresRepository) Save(
 	const op = "PostgresBotsRepository.Save"
 
 	stmt, err := r.db.Prepare(
-		"INSERT INTO bots (name, token, start) VALUES ($1, $2, $3) RETURNING id")
+		`INSERT INTO bots (name, token, start) 
+               VALUES ($1, $2, $3)
+               RETURNING id`)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
 	var id int64
@@ -62,7 +63,7 @@ func (r *botPostgresRepository) Bot(
 ) (*entity.Bot, error) {
 	const op = "PostgresBotsRepository.Bot"
 
-	stmt, err := r.db.Prepare("SELECT id, name, token, start FROM bots WHERE id = $1")
+	stmt, err := r.db.Prepare(`SELECT id, name, token, start FROM bots WHERE id = $1`)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

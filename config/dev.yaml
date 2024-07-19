@@ -1,0 +1,8 @@
+env: dev
+grpc:
+  host: it-bots
+  port: 40000
+  timeout: 10s
+postgres:
+  host: db
+  port: 5432

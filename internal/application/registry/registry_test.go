@@ -1,9 +1,9 @@
-package application_test
+package registry_test
 
 import (
 	"context"
-	"github.com/bmstu-itstech/itsreg-bots/internal/application"
 	"github.com/bmstu-itstech/itsreg-bots/internal/application/dto"
+	"github.com/bmstu-itstech/itsreg-bots/internal/application/registry"
 	"github.com/bmstu-itstech/itsreg-bots/internal/domain/entity"
 	"github.com/bmstu-itstech/itsreg-bots/internal/domain/value"
 	blockmemory "github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/repository/block/memory"
@@ -27,7 +27,7 @@ func TestBotsManager_Create(t *testing.T) {
 		botRepos := botmemory.NewMemoryBotRepository()
 		blcRepos := blockmemory.NewMemoryBlockRepository()
 
-		manager := application.NewBotsManager(
+		reg := registry.New(
 			slogdiscard.NewDiscardLogger(),
 			botRepos, blcRepos)
 
@@ -55,7 +55,7 @@ func TestBotsManager_Create(t *testing.T) {
 			},
 		}
 
-		id, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
+		id, err := reg.Create(ctx, a.name, a.token, a.start, a.blocks)
 		require.NoError(t, err)
 		require.NotZero(t, id)
 	})
@@ -66,7 +66,7 @@ func TestBotsManager_Create(t *testing.T) {
 		botRepos := botmemory.NewMemoryBotRepository()
 		blcRepos := blockmemory.NewMemoryBlockRepository()
 
-		manager := application.NewBotsManager(
+		reg := registry.New(
 			slogdiscard.NewDiscardLogger(),
 			botRepos, blcRepos)
 
@@ -86,7 +86,7 @@ func TestBotsManager_Create(t *testing.T) {
 			},
 		}
 
-		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
+		_, err := reg.Create(ctx, a.name, a.token, a.start, a.blocks)
 		require.ErrorIs(t, err, entity.ErrInvalidBotName)
 	})
 
@@ -96,7 +96,7 @@ func TestBotsManager_Create(t *testing.T) {
 		botRepos := botmemory.NewMemoryBotRepository()
 		blcRepos := blockmemory.NewMemoryBlockRepository()
 
-		manager := application.NewBotsManager(
+		reg := registry.New(
 			slogdiscard.NewDiscardLogger(),
 			botRepos, blcRepos)
 
@@ -116,7 +116,7 @@ func TestBotsManager_Create(t *testing.T) {
 			},
 		}
 
-		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
+		_, err := reg.Create(ctx, a.name, a.token, a.start, a.blocks)
 		require.ErrorIs(t, err, entity.ErrInvalidBotToken)
 	})
 
@@ -126,7 +126,7 @@ func TestBotsManager_Create(t *testing.T) {
 		botRepos := botmemory.NewMemoryBotRepository()
 		blcRepos := blockmemory.NewMemoryBlockRepository()
 
-		manager := application.NewBotsManager(
+		reg := registry.New(
 			slogdiscard.NewDiscardLogger(),
 			botRepos, blcRepos)
 
@@ -146,8 +146,8 @@ func TestBotsManager_Create(t *testing.T) {
 			},
 		}
 
-		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
-		require.ErrorIs(t, err, application.ErrNodeNotFound)
+		_, err := reg.Create(ctx, a.name, a.token, a.start, a.blocks)
+		require.ErrorIs(t, err, registry.ErrNodeNotFound)
 	})
 
 	t.Run("should return an error if bot has a cycle", func(t *testing.T) {
@@ -156,7 +156,7 @@ func TestBotsManager_Create(t *testing.T) {
 		botRepos := botmemory.NewMemoryBotRepository()
 		blcRepos := blockmemory.NewMemoryBlockRepository()
 
-		manager := application.NewBotsManager(
+		reg := registry.New(
 			slogdiscard.NewDiscardLogger(),
 			botRepos, blcRepos)
 
@@ -210,8 +210,8 @@ func TestBotsManager_Create(t *testing.T) {
 			},
 		}
 
-		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
-		require.ErrorIs(t, err, application.ErrRecursionFound)
+		_, err := reg.Create(ctx, a.name, a.token, a.start, a.blocks)
+		require.ErrorIs(t, err, registry.ErrRecursionFound)
 	})
 
 	t.Run("should return an error if bot has an unused block", func(t *testing.T) {
@@ -220,7 +220,7 @@ func TestBotsManager_Create(t *testing.T) {
 		botRepos := botmemory.NewMemoryBotRepository()
 		blcRepos := blockmemory.NewMemoryBlockRepository()
 
-		manager := application.NewBotsManager(
+		reg := registry.New(
 			slogdiscard.NewDiscardLogger(),
 			botRepos, blcRepos)
 
@@ -248,8 +248,8 @@ func TestBotsManager_Create(t *testing.T) {
 			},
 		}
 
-		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
-		require.ErrorIs(t, err, application.ErrUnusedBlockFound)
+		_, err := reg.Create(ctx, a.name, a.token, a.start, a.blocks)
+		require.ErrorIs(t, err, registry.ErrUnusedBlockFound)
 	})
 
 	t.Run("should return an error if bot has invalid message block", func(t *testing.T) {
@@ -258,7 +258,7 @@ func TestBotsManager_Create(t *testing.T) {
 		botRepos := botmemory.NewMemoryBotRepository()
 		blcRepos := blockmemory.NewMemoryBlockRepository()
 
-		manager := application.NewBotsManager(
+		reg := registry.New(
 			slogdiscard.NewDiscardLogger(),
 			botRepos, blcRepos)
 
@@ -291,7 +291,7 @@ func TestBotsManager_Create(t *testing.T) {
 			},
 		}
 
-		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
+		_, err := reg.Create(ctx, a.name, a.token, a.start, a.blocks)
 		require.ErrorIs(t, err, value.ErrInvalidMessageNode)
 	})
 
@@ -301,7 +301,7 @@ func TestBotsManager_Create(t *testing.T) {
 		botRepos := botmemory.NewMemoryBotRepository()
 		blcRepos := blockmemory.NewMemoryBlockRepository()
 
-		manager := application.NewBotsManager(
+		reg := registry.New(
 			slogdiscard.NewDiscardLogger(),
 			botRepos, blcRepos)
 
@@ -334,7 +334,7 @@ func TestBotsManager_Create(t *testing.T) {
 			},
 		}
 
-		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
+		_, err := reg.Create(ctx, a.name, a.token, a.start, a.blocks)
 		require.ErrorIs(t, err, value.ErrInvalidQuestionNode)
 	})
 
@@ -344,7 +344,7 @@ func TestBotsManager_Create(t *testing.T) {
 		botRepos := botmemory.NewMemoryBotRepository()
 		blcRepos := blockmemory.NewMemoryBlockRepository()
 
-		manager := application.NewBotsManager(
+		reg := registry.New(
 			slogdiscard.NewDiscardLogger(),
 			botRepos, blcRepos)
 
@@ -377,7 +377,7 @@ func TestBotsManager_Create(t *testing.T) {
 			},
 		}
 
-		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
+		_, err := reg.Create(ctx, a.name, a.token, a.start, a.blocks)
 		require.ErrorIs(t, err, value.ErrInvalidSelectionNode)
 	})
 
@@ -388,7 +388,7 @@ func TestBotsManager_Create(t *testing.T) {
 		botRepos := botmemory.NewMemoryBotRepository()
 		blcRepos := blockmemory.NewMemoryBlockRepository()
 
-		manager := application.NewBotsManager(
+		reg := registry.New(
 			slogdiscard.NewDiscardLogger(),
 			botRepos, blcRepos)
 
@@ -413,7 +413,7 @@ func TestBotsManager_Create(t *testing.T) {
 			},
 		}
 
-		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
+		_, err := reg.Create(ctx, a.name, a.token, a.start, a.blocks)
 		require.ErrorIs(t, err, value.ErrInvalidOptionNext)
 	})
 
@@ -423,7 +423,7 @@ func TestBotsManager_Create(t *testing.T) {
 		botRepos := botmemory.NewMemoryBotRepository()
 		blcRepos := blockmemory.NewMemoryBlockRepository()
 
-		manager := application.NewBotsManager(
+		reg := registry.New(
 			slogdiscard.NewDiscardLogger(),
 			botRepos, blcRepos)
 
@@ -443,7 +443,7 @@ func TestBotsManager_Create(t *testing.T) {
 			},
 		}
 
-		_, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
+		_, err := reg.Create(ctx, a.name, a.token, a.start, a.blocks)
 		require.ErrorIs(t, err, value.ErrInvalidNodeType)
 	})
 
@@ -453,7 +453,7 @@ func TestBotsManager_Create(t *testing.T) {
 		botRepos := botmemory.NewMemoryBotRepository()
 		blcRepos := blockmemory.NewMemoryBlockRepository()
 
-		manager := application.NewBotsManager(
+		reg := registry.New(
 			slogdiscard.NewDiscardLogger(),
 			botRepos, blcRepos)
 
@@ -473,10 +473,10 @@ func TestBotsManager_Create(t *testing.T) {
 			},
 		}
 
-		botId1, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
+		botId1, err := reg.Create(ctx, a.name, a.token, a.start, a.blocks)
 		require.NoError(t, err)
 
-		botId2, err := manager.Create(ctx, a.name, a.token, a.start, a.blocks)
+		botId2, err := reg.Create(ctx, a.name, a.token, a.start, a.blocks)
 		require.NoError(t, err)
 		require.NotEqual(t, botId1, botId2)
 	})

@@ -1,13 +1,17 @@
-package tests
+package test
 
 import (
-	"github.com/bmstu-itstech/itsreg-bots/tests/suite"
+	"github.com/bmstu-itstech/itsreg-bots/test/suite"
 	pb "github.com/bmstu-itstech/itsreg-proto/gen/go/bots"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestBotsService_CreateAndProcessSuccess01(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	ctx, s := suite.New(t)
 
 	cRes, err := s.Client.Create(ctx, &pb.CreateRequest{
@@ -62,6 +66,10 @@ func TestBotsService_CreateAndProcessSuccess01(t *testing.T) {
 }
 
 func TestBotsService_CreateAndProcessSuccess02(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	ctx, s := suite.New(t)
 
 	cRes, err := s.Client.Create(ctx, &pb.CreateRequest{

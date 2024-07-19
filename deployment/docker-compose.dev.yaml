@@ -1,0 +1,55 @@
+services:
+  bots:
+    container_name: it-bots
+    build:
+      context: ../
+      args:
+        CONFIG_PATH: config/dev.yaml
+    ports:
+      - 40000:40000
+    depends_on:
+      bots-db:
+        condition: service_healthy
+        restart: true
+    networks:
+      - web-bots
+      - web-api
+
+  bots-db:
+    image: postgres:15.3-alpine3.18
+    container_name: it-bots-postgres
+    command: postgres
+    ports:
+      - 5432
+    environment:
+      POSTGRES_USER: $PG_USER
+      POSTGRES_PASSWORD: $PG_PASS
+      POSTGRES_DB: $PG_DB
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $PG_USER -d $PG_DB" ]
+      interval: 5s
+      retries: 5
+      start_period: 10s
+      timeout: 10s
+    networks:
+      web-bots:
+        aliases:
+          - db
+
+  bots-migrate:
+    image: migrate/migrate
+    container_name: it-bots-migrate
+    networks:
+      - web-bots
+    volumes:
+      - ../migrations:/migrations
+    command: [ "-path", "/migrations", "-database", "postgres://${PG_USER}:${PG_PASS}@db:5432/${PG_DB}?sslmode=disable", "up" ]
+    depends_on:
+      bots-db:
+        condition: service_healthy
+
+networks:
+  web-bots:
+    driver: bridge
+  web-api:
+    driver: bridge

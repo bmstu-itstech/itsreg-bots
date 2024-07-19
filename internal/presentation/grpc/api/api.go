@@ -14,20 +14,20 @@ import (
 
 type grpcApi struct {
 	botsv1.UnimplementedBotsServiceServer
-	bots *application.BotsService
+	app *application.App
 }
 
 func Register(
 	grpcServer *grpc.Server,
-	bots *application.BotsService,
+	app *application.App,
 ) {
-	botsv1.RegisterBotsServiceServer(grpcServer, &grpcApi{bots: bots})
+	botsv1.RegisterBotsServiceServer(grpcServer, &grpcApi{app: app})
 }
 
 func (a *grpcApi) Create(ctx context.Context, req *botsv1.CreateRequest) (*botsv1.CreateResponse, error) {
 	blocks := blocksToDtos(req.Blocks)
 
-	id, err := a.bots.Create(ctx, req.Name, req.Token, req.Start, blocks)
+	id, err := a.app.Registry.Create(ctx, req.Name, req.Token, req.Start, blocks)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create bot: %v", err)
 	}
@@ -41,7 +41,7 @@ func (a *grpcApi) Process(ctx context.Context, req *botsv1.ProcessRequest) (*bot
 	botId := value.BotId(req.BotId)
 	userId := value.UserId(req.UserId)
 
-	messages, err := a.bots.Process(ctx, uint64(botId), uint64(userId), req.Text)
+	messages, err := a.app.Processor.Process(ctx, uint64(botId), uint64(userId), req.Text)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to process bot: %v", err)
 	}
@@ -54,7 +54,7 @@ func (a *grpcApi) Process(ctx context.Context, req *botsv1.ProcessRequest) (*bot
 func (a *grpcApi) GetToken(ctx context.Context, req *botsv1.TokenRequest) (*botsv1.TokenResponse, error) {
 	botId := value.BotId(req.BotId)
 
-	token, err := a.bots.Token(ctx, uint64(botId))
+	token, err := a.app.Registry.Token(ctx, uint64(botId))
 	if err != nil {
 		if errors.Is(err, interfaces.ErrBotNotFound) {
 			return nil, status.Errorf(codes.NotFound, "bot not found")

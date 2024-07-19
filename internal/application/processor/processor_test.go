@@ -1,9 +1,9 @@
-package application_test
+package processor_test
 
 import (
 	"context"
-	"github.com/bmstu-itstech/itsreg-bots/internal/application"
 	"github.com/bmstu-itstech/itsreg-bots/internal/application/dto"
+	"github.com/bmstu-itstech/itsreg-bots/internal/application/processor"
 	"github.com/bmstu-itstech/itsreg-bots/internal/domain/entity"
 	"github.com/bmstu-itstech/itsreg-bots/internal/domain/value"
 	ansmemory "github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/repository/answer/memory"
@@ -15,7 +15,7 @@ import (
 	"testing"
 )
 
-func TestBotsProcessor_Process(t *testing.T) {
+func TestProcessor_Process(t *testing.T) {
 	var script []*entity.Block
 	ctx := context.Background()
 
@@ -68,7 +68,7 @@ func TestBotsProcessor_Process(t *testing.T) {
 
 	ansRepos := ansmemory.NewMemoryAnswerRepository()
 
-	proc := application.NewProcessor(
+	proc := processor.New(
 		slogdiscard.NewDiscardLogger(),
 		ansRepos, blockRepos, botRepos, prtRepos)
 

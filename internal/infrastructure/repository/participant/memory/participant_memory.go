@@ -5,22 +5,27 @@ import (
 	"github.com/bmstu-itstech/itsreg-bots/internal/domain/entity"
 	"github.com/bmstu-itstech/itsreg-bots/internal/domain/value"
 	"github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/interfaces"
+	"sync"
 )
 
-type participantMemoryRepository struct {
+type ParticipantMemoryRepository struct {
 	m map[value.ParticipantId]*entity.Participant
+	sync.RWMutex
 }
 
-func NewMemoryParticipantRepository() interfaces.ParticipantRepository {
-	return &participantMemoryRepository{
+func NewMemoryParticipantRepository() *ParticipantMemoryRepository {
+	return &ParticipantMemoryRepository{
 		m: make(map[value.ParticipantId]*entity.Participant),
 	}
 }
 
-func (r *participantMemoryRepository) Save(
+func (r *ParticipantMemoryRepository) Save(
 	_ context.Context,
 	participant *entity.Participant,
 ) error {
+	r.Lock()
+	defer r.Unlock()
+
 	if _, ok := r.m[participant.Id]; ok {
 		return interfaces.ErrParticipantAlreadyExists
 	}
@@ -29,10 +34,13 @@ func (r *participantMemoryRepository) Save(
 	return nil
 }
 
-func (r *participantMemoryRepository) Participant(
+func (r *ParticipantMemoryRepository) Participant(
 	_ context.Context,
 	id value.ParticipantId,
 ) (*entity.Participant, error) {
+	r.RLock()
+	defer r.RUnlock()
+
 	prt, ok := r.m[id]
 	if !ok {
 		return nil, interfaces.ErrParticipantNotFound
@@ -41,11 +49,14 @@ func (r *participantMemoryRepository) Participant(
 	return prt, nil
 }
 
-func (r *participantMemoryRepository) UpdateState(
+func (r *ParticipantMemoryRepository) UpdateState(
 	_ context.Context,
 	id value.ParticipantId,
 	state value.State,
 ) error {
+	r.Lock()
+	defer r.Unlock()
+
 	prt, ok := r.m[id]
 	if !ok {
 		return interfaces.ErrParticipantNotFound

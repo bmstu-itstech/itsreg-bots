@@ -10,9 +10,12 @@ import (
 )
 
 func TestAnswerMemoryRepository_Save(t *testing.T) {
+	t.Parallel()
+
 	t.Run("should save an answer", func(t *testing.T) {
+		t.Parallel()
 		ctx := context.Background()
-		repos := answerMemoryRepository{
+		repos := AnswerMemoryRepository{
 			m: map[value.AnswerId]*entity.Answer{},
 		}
 
@@ -35,8 +38,9 @@ func TestAnswerMemoryRepository_Save(t *testing.T) {
 	})
 
 	t.Run("should return error when answer already exists", func(t *testing.T) {
+		t.Parallel()
 		ctx := context.Background()
-		repos := answerMemoryRepository{
+		repos := AnswerMemoryRepository{
 			m: map[value.AnswerId]*entity.Answer{},
 		}
 
@@ -69,6 +73,8 @@ func TestAnswerMemoryRepository_Save(t *testing.T) {
 }
 
 func TestAnswerMemoryRepository_AnswersFrom(t *testing.T) {
+	t.Parallel()
+
 	answers := []*entity.Answer{
 		{
 			Id: value.AnswerId{
@@ -102,12 +108,13 @@ func TestAnswerMemoryRepository_AnswersFrom(t *testing.T) {
 		},
 	}
 
-	repos := answerMemoryRepository{m: map[value.AnswerId]*entity.Answer{}}
+	repos := AnswerMemoryRepository{m: map[value.AnswerId]*entity.Answer{}}
 	for _, ans := range answers {
 		repos.m[ans.Id] = ans
 	}
 
 	t.Run("should find answers", func(t *testing.T) {
+		t.Parallel()
 		ctx := context.Background()
 
 		prtId := value.ParticipantId{
@@ -126,6 +133,7 @@ func TestAnswerMemoryRepository_AnswersFrom(t *testing.T) {
 	})
 
 	t.Run("should return empty answers", func(t *testing.T) {
+		t.Parallel()
 		ctx := context.Background()
 
 		prtId := value.ParticipantId{
