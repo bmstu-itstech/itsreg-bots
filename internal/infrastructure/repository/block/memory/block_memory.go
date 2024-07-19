@@ -5,6 +5,7 @@ import (
 	"github.com/bmstu-itstech/itsreg-bots/internal/domain/entity"
 	"github.com/bmstu-itstech/itsreg-bots/internal/domain/value"
 	"github.com/bmstu-itstech/itsreg-bots/internal/infrastructure/interfaces"
+	"sync"
 )
 
 type blockId struct {
@@ -12,20 +13,24 @@ type blockId struct {
 	state value.State
 }
 
-type blockMemoryRepository struct {
+type BlockMemoryRepository struct {
 	m map[blockId]*entity.Block
+	sync.RWMutex
 }
 
-func NewMemoryBlockRepository() interfaces.BlockRepository {
-	return &blockMemoryRepository{
+func NewMemoryBlockRepository() *BlockMemoryRepository {
+	return &BlockMemoryRepository{
 		m: make(map[blockId]*entity.Block),
 	}
 }
 
-func (r *blockMemoryRepository) Save(
+func (r *BlockMemoryRepository) Save(
 	_ context.Context,
 	block *entity.Block,
 ) error {
+	r.Lock()
+	defer r.Unlock()
+
 	id := blockId{
 		botId: block.BotId,
 		state: block.State,
@@ -39,11 +44,14 @@ func (r *blockMemoryRepository) Save(
 	return nil
 }
 
-func (r *blockMemoryRepository) Block(
+func (r *BlockMemoryRepository) Block(
 	_ context.Context,
 	botId value.BotId,
 	state value.State,
 ) (*entity.Block, error) {
+	r.RLock()
+	defer r.RUnlock()
+
 	id := blockId{
 		botId: botId,
 		state: state,

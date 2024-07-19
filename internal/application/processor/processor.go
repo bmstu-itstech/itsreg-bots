@@ -1,4 +1,4 @@
-package application
+package processor
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"log/slog"
 )
 
-type BotsProcessor struct {
+type Processor struct {
 	log     *slog.Logger
 	ansRepo interfaces2.AnswerRepository
 	blcRepo interfaces2.BlockRepository
@@ -18,16 +18,16 @@ type BotsProcessor struct {
 	prtRepo interfaces2.ParticipantRepository
 }
 
-type Option func(*BotsProcessor) error
+type Option func(*Processor) error
 
-func NewProcessor(
+func New(
 	log *slog.Logger,
 	ansRepo interfaces2.AnswerRepository,
 	blcRepo interfaces2.BlockRepository,
 	botRepo interfaces2.BotRepository,
 	prtRepo interfaces2.ParticipantRepository,
-) *BotsProcessor {
-	return &BotsProcessor{
+) *Processor {
+	return &Processor{
 		log:     log,
 		ansRepo: ansRepo,
 		blcRepo: blcRepo,
@@ -36,13 +36,13 @@ func NewProcessor(
 	}
 }
 
-func (p *BotsProcessor) Process(
+func (p *Processor) Process(
 	ctx context.Context,
 	botId uint64,
 	userId uint64,
 	ans string,
 ) ([]dto.Message, error) {
-	const op = "BotsProcessor.Process"
+	const op = "Processor.Process"
 
 	var res []dto.Message
 

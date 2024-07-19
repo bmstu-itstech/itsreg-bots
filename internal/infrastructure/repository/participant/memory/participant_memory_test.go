@@ -10,9 +10,13 @@ import (
 )
 
 func TestParticipantMemoryRepository_Save(t *testing.T) {
+	t.Parallel()
+
 	t.Run("should save a participant", func(t *testing.T) {
+		t.Parallel()
+
 		ctx := context.Background()
-		repos := participantMemoryRepository{
+		repos := ParticipantMemoryRepository{
 			m: map[value.ParticipantId]*entity.Participant{},
 		}
 
@@ -32,8 +36,10 @@ func TestParticipantMemoryRepository_Save(t *testing.T) {
 	})
 
 	t.Run("should return error when participant already exists", func(t *testing.T) {
+		t.Parallel()
+
 		ctx := context.Background()
-		repos := participantMemoryRepository{
+		repos := ParticipantMemoryRepository{
 			m: map[value.ParticipantId]*entity.Participant{},
 		}
 
@@ -60,6 +66,8 @@ func TestParticipantMemoryRepository_Save(t *testing.T) {
 }
 
 func TestBlockMemoryRepository_Block(t *testing.T) {
+	t.Parallel()
+
 	participants := []*entity.Participant{
 		{
 			Id: value.ParticipantId{
@@ -77,7 +85,7 @@ func TestBlockMemoryRepository_Block(t *testing.T) {
 		},
 	}
 
-	repos := participantMemoryRepository{
+	repos := ParticipantMemoryRepository{
 		m: map[value.ParticipantId]*entity.Participant{},
 	}
 
@@ -86,6 +94,7 @@ func TestBlockMemoryRepository_Block(t *testing.T) {
 	}
 
 	t.Run("should find participant", func(t *testing.T) {
+		t.Parallel()
 		ctx := context.Background()
 
 		got, err := repos.Participant(ctx, value.ParticipantId{
@@ -98,6 +107,7 @@ func TestBlockMemoryRepository_Block(t *testing.T) {
 	})
 
 	t.Run("should return error when participant does not exists", func(t *testing.T) {
+		t.Parallel()
 		ctx := context.Background()
 
 		_, err := repos.Participant(ctx, value.ParticipantId{
@@ -109,6 +119,8 @@ func TestBlockMemoryRepository_Block(t *testing.T) {
 }
 
 func TestParticipantMemoryRepository_UpdateState(t *testing.T) {
+	t.Parallel()
+
 	participants := []*entity.Participant{
 		{
 			Id: value.ParticipantId{
@@ -119,7 +131,7 @@ func TestParticipantMemoryRepository_UpdateState(t *testing.T) {
 		},
 	}
 
-	repos := participantMemoryRepository{
+	repos := ParticipantMemoryRepository{
 		m: map[value.ParticipantId]*entity.Participant{},
 	}
 
@@ -128,6 +140,7 @@ func TestParticipantMemoryRepository_UpdateState(t *testing.T) {
 	}
 
 	t.Run("should update state", func(t *testing.T) {
+		t.Parallel()
 		ctx := context.Background()
 
 		prtId := value.ParticipantId{
@@ -143,6 +156,7 @@ func TestParticipantMemoryRepository_UpdateState(t *testing.T) {
 	})
 
 	t.Run("should return error when participant does not exists", func(t *testing.T) {
+		t.Parallel()
 		ctx := context.Background()
 
 		prtId := value.ParticipantId{

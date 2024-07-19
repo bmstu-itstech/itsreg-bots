@@ -4,8 +4,8 @@ grpc:
   port: 40000
   timeout: 10s
 postgres:
+  user: test-user
+  pass: test-pass
   host: localhost
-  port: 50000
-  user: bots-service
-  password: s3cr3t
-  dbname: itsreg
+  port: 54321
+  db: test-db

@@ -10,9 +10,13 @@ import (
 )
 
 func TestBotMemoryRepository_Save(t *testing.T) {
+	t.Parallel()
+
 	t.Run("should save the bot", func(t *testing.T) {
+		t.Parallel()
+
 		ctx := context.Background()
-		repos := botMemoryRepository{
+		repos := BotMemoryRepository{
 			m: map[value.BotId]*entity.Bot{},
 		}
 
@@ -30,6 +34,8 @@ func TestBotMemoryRepository_Save(t *testing.T) {
 }
 
 func TestBotMemoryRepository_Bot(t *testing.T) {
+	t.Parallel()
+
 	expected, err := entity.NewBot(
 		value.BotId(42),
 		"example bot",
@@ -37,13 +43,14 @@ func TestBotMemoryRepository_Bot(t *testing.T) {
 		value.State(37))
 	require.NoError(t, err)
 
-	repos := botMemoryRepository{
+	repos := BotMemoryRepository{
 		m: map[value.BotId]*entity.Bot{
 			expected.Id: expected,
 		},
 	}
 
 	t.Run("should find the bot", func(t *testing.T) {
+		t.Parallel()
 		ctx := context.Background()
 
 		bot, err := repos.Bot(ctx, value.BotId(42))
@@ -52,6 +59,7 @@ func TestBotMemoryRepository_Bot(t *testing.T) {
 	})
 
 	t.Run("should return error when bot does not exists", func(t *testing.T) {
+		t.Parallel()
 		ctx := context.Background()
 
 		_, err := repos.Bot(ctx, value.BotId(37))
