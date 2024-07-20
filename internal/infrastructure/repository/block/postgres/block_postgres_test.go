@@ -45,6 +45,10 @@ func setupRepos(t *testing.T) *BlockPostgresRepository {
 }
 
 func TestBlockPostgresRepository_Save(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping postgresql tests in short mode")
+	}
+
 	t.Parallel()
 	ctx := context.Background()
 	repos := setupRepos(t)
@@ -238,6 +242,10 @@ func TestBlockPostgresRepository_Save(t *testing.T) {
 }
 
 func TestBlockPostgresRepository_Block(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping postgresql tests in short mode")
+	}
+
 	t.Parallel()
 	ctx := context.Background()
 	repos := setupRepos(t)

@@ -17,9 +17,4 @@ jobs:
       - name: Install dependencies
         run: go mod tidy
       - name: Test with Go
-        run: go test ./... -short #-json > TestResults.json
-      #- name: Upload Go test results
-      #  uses: actions/upload-artifact@v4
-      #  with:
-      #    name: Go-results
-      #    path: TestResults.json
+        run: go test ./... -short
