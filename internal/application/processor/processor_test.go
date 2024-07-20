@@ -181,7 +181,7 @@ func TestProcessor_Process(t *testing.T) {
 
 		prt, err = prtRepos.Participant(ctx, prtId)
 		require.NoError(t, err)
-		require.Equal(t, value.StateNone, prt.Current)
+		require.Equal(t, value.State(3), prt.Current)
 
 		ans, err := ansRepos.AnswersFrom(ctx, prtId)
 		require.NoError(t, err)
@@ -194,31 +194,6 @@ func TestProcessor_Process(t *testing.T) {
 			Value: "To 4",
 		}
 		require.Equal(t, exp, *ans[0])
-	})
-
-	t.Run("should return error when participant already finished", func(t *testing.T) {
-		tempUserId++
-		prtId := value.ParticipantId{BotId: bot.Id, UserId: tempUserId}
-		ctx := context.Background()
-
-		prt, err := entity.NewParticipant(prtId, value.State(9))
-		require.NoError(t, err)
-		err = prtRepos.Save(ctx, prt)
-		require.NoError(t, err)
-		err = prtRepos.UpdateState(ctx, prtId, value.StateNone)
-		require.NoError(t, err)
-
-		res, err := proc.Process(ctx, uint64(bot.Id), uint64(tempUserId), "Any text")
-		require.NoError(t, err)
-		require.Empty(t, res)
-
-		prt, err = prtRepos.Participant(ctx, prtId)
-		require.NoError(t, err)
-		require.Equal(t, value.StateNone, prt.Current)
-
-		ans, err := ansRepos.AnswersFrom(ctx, prtId)
-		require.NoError(t, err)
-		require.Empty(t, ans)
 	})
 
 	t.Run("should answer an error when participant does not choose an option", func(t *testing.T) {

@@ -61,6 +61,7 @@ func (p *Processor) Process(
 	prt, err := p.prtRepo.Participant(ctx, prtId)
 	if err != nil {
 		if errors.Is(err, interfaces2.ErrParticipantNotFound) {
+			// Новый участник бота.
 			b, err := p.botRepo.Bot(ctx, prtId.BotId)
 			if err != nil {
 				log.Error("failed to get bot", "err", err.Error())
@@ -84,17 +85,16 @@ func (p *Processor) Process(
 			return res, err
 		}
 	} else {
-		if prt.Current.IsNone() {
-			log.Info("participant already finished")
-			return res, nil
-		}
+		// Уже существующий участник бота.
 
+		// Текущий блок.
 		block, err := p.blcRepo.Block(ctx, prtId.BotId, prt.Current)
 		if err != nil {
 			log.Error("failed to get block", "block", prt.Current, "err", err.Error())
 			return res, err
 		}
 
+		// Следующее состояние для данного ответа.
 		state, err = block.Next(ans)
 		if errors.Is(err, value.ErrIncorrectAnswer) {
 			res = append(res, dto.Message{
@@ -123,19 +123,17 @@ func (p *Processor) Process(
 		}
 	}
 
+	if state.IsNone() {
+		log.Info("participant finished script")
+		return res, nil
+	}
+
 	prt.Current = state
 	err = p.prtRepo.UpdateState(ctx, prtId, prt.Current)
 	if err != nil {
 		log.Error("failed to update participant's state", "err", err.Error())
 		return res, err
 	}
-
-	if state.IsNone() {
-		log.Info("participant finished script")
-		return res, nil
-	}
-
-	log.Info("processing state", "state", state)
 
 	next, err := p.blcRepo.Block(ctx, prtId.BotId, state)
 	if err != nil {
