@@ -13,6 +13,7 @@ var (
 )
 
 type BlockRepository interface {
+	Close() error
 	Save(context.Context, *entity.Block) error
 	Block(context.Context, value.BotId, value.State) (*entity.Block, error)
 }

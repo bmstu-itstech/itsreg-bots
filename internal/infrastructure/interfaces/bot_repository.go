@@ -12,6 +12,7 @@ var (
 )
 
 type BotRepository interface {
+	Close() error
 	Save(context.Context, *entity.Bot) (value.BotId, error)
 	Bot(context.Context, value.BotId) (*entity.Bot, error)
 }

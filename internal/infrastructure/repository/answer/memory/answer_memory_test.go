@@ -68,7 +68,7 @@ func TestAnswerMemoryRepository_Save(t *testing.T) {
 		require.NoError(t, err)
 
 		err = repos.Save(ctx, another)
-		require.ErrorIs(t, err, interfaces.ErrAnswerAlreadyExists)
+		require.ErrorIs(t, err, interfaces.ErrAnswerExists)
 	})
 }
 

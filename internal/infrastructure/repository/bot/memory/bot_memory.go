@@ -49,3 +49,7 @@ func (r *BotMemoryRepository) Bot(
 
 	return bot, nil
 }
+
+func (r *BotMemoryRepository) Close() error {
+	return nil
+}

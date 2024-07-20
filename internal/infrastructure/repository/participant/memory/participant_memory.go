@@ -66,3 +66,7 @@ func (r *ParticipantMemoryRepository) UpdateState(
 
 	return nil
 }
+
+func (r *ParticipantMemoryRepository) Close() error {
+	return nil
+}
