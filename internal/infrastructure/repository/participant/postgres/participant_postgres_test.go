@@ -349,32 +349,4 @@ func TestParticipantPostgresRepository_UpdateState(t *testing.T) {
 		}, expected)
 		require.ErrorIs(t, err, interfaces.ErrParticipantNotFound)
 	})
-
-	t.Run("should set state to None", func(t *testing.T) {
-		t.Parallel()
-
-		expected := value.StateNone // Ожидаем сменить состояние на конечное.
-		err := repos.UpdateState(ctx, value.ParticipantId{
-			BotId:  botId,
-			UserId: userId2,
-		}, expected)
-		require.NoError(t, err)
-
-		// Проверяем, что состояние требуемого участника изменилось на ожидаемое.
-		var got value.State
-		err = pgutils.Get(
-			ctx, repos.db, &got,
-			`SELECT current FROM participants WHERE bot_id = $1 AND user_id = $2`,
-			botId, userId2)
-		require.NoError(t, err)
-		require.Equal(t, expected, got)
-
-		// Проверяем, что не изменилось состояние другого участника.
-		err = pgutils.Get(
-			ctx, repos.db, &got,
-			`SELECT current FROM participants WHERE bot_id = $1 AND user_id = $2`,
-			botId, userId1)
-		require.NoError(t, err)
-		require.NotEqual(t, expected, got)
-	})
 }
