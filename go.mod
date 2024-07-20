@@ -4,6 +4,7 @@ go 1.22.5
 
 require (
 	github.com/bmstu-itstech/itsreg-proto v0.2.1
+	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/fatih/color v1.17.0
 	github.com/gabrielmellooliveira/go-spec v0.0.0-20231001232514-4f0efe85b085
 	github.com/golang-migrate/migrate/v4 v4.17.0
@@ -20,7 +21,6 @@ require (
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/brianvoe/gofakeit/v6 v6.28.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/docker v27.0.3+incompatible // indirect
