@@ -64,3 +64,7 @@ func (r *BlockMemoryRepository) Block(
 
 	return block, nil
 }
+
+func (r *BlockMemoryRepository) Close() error {
+	return nil
+}

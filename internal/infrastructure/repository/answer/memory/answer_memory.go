@@ -27,7 +27,7 @@ func (r *AnswerMemoryRepository) Save(
 	defer r.Unlock()
 
 	if _, ok := r.m[answer.Id]; ok {
-		return interfaces.ErrAnswerAlreadyExists
+		return interfaces.ErrAnswerExists
 	}
 
 	r.m[answer.Id] = answer
@@ -50,4 +50,8 @@ func (r *AnswerMemoryRepository) AnswersFrom(
 	}
 
 	return answers, nil
+}
+
+func (r *AnswerMemoryRepository) Close() error {
+	return nil
 }

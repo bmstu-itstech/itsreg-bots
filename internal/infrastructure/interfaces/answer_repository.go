@@ -8,10 +8,11 @@ import (
 )
 
 var (
-	ErrAnswerAlreadyExists = errors.New("answer already exists")
+	ErrAnswerExists = errors.New("answer already exists")
 )
 
 type AnswerRepository interface {
+	Close() error
 	Save(context.Context, *entity.Answer) error
 	AnswersFrom(context.Context, value.ParticipantId) ([]*entity.Answer, error)
 }
