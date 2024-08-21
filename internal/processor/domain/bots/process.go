@@ -33,7 +33,7 @@ func (b *Bot) Process(
 	var ans *Answer
 	if current.Type != MessageBlock {
 		var err error
-		ans, err = NewAnswer(prt.ID, current.State, text)
+		ans, err = NewAnswer(prt.UserID, current.State, text)
 		if err != nil {
 			return nil, nil, err
 		}

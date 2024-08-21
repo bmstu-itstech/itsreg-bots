@@ -29,3 +29,11 @@ func NewAnswer(userID int64, state int, text string) (*Answer, error) {
 		Text:   text,
 	}, nil
 }
+
+func MustNewAnswer(userID int64, state int, text string) *Answer {
+	a, err := NewAnswer(userID, state, text)
+	if err != nil {
+		panic(err)
+	}
+	return a
+}

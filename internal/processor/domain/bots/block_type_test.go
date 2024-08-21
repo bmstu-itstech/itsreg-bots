@@ -1,9 +1,11 @@
 package bots_test
 
 import (
-	"github.com/bmstu-itstech/itsreg-bots/internal/domain/bots"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/bmstu-itstech/itsreg-bots/internal/processor/domain/bots"
 )
 
 func TestNewBlockTypeFromString(t *testing.T) {

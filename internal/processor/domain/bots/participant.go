@@ -3,8 +3,8 @@ package bots
 import "errors"
 
 type Participant struct {
-	ID    int64
-	State int
+	UserID int64
+	State  int
 }
 
 func NewParticipant(
@@ -16,8 +16,8 @@ func NewParticipant(
 	}
 
 	return &Participant{
-		ID:    id,
-		State: state,
+		UserID: id,
+		State:  state,
 	}, nil
 }
 

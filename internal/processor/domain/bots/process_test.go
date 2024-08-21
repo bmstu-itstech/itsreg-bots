@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bmstu-itstech/itsreg-bots/internal/domain/bots"
+	"github.com/bmstu-itstech/itsreg-bots/internal/processor/domain/bots"
 )
 
 func TestBot_Process(t *testing.T) {
@@ -37,7 +37,7 @@ func TestBot_Process(t *testing.T) {
 		require.Len(t, processed, 1)
 		require.Equal(t, 2, processed[0].State)
 
-		require.Equal(t, prt.ID, answer.UserID)
+		require.Equal(t, prt.UserID, answer.UserID)
 		require.Equal(t, "random answer", answer.Text)
 		require.Equal(t, 1, answer.State)
 
@@ -55,7 +55,7 @@ func TestBot_Process(t *testing.T) {
 		require.Len(t, processed, 1)
 		require.Equal(t, 5, processed[0].State)
 
-		require.Equal(t, prt.ID, answer.UserID)
+		require.Equal(t, prt.UserID, answer.UserID)
 		require.Equal(t, "5", answer.Text)
 		require.Equal(t, 2, answer.State)
 
@@ -73,7 +73,7 @@ func TestBot_Process(t *testing.T) {
 		require.Len(t, processed, 1)
 		require.Equal(t, 2, processed[0].State)
 
-		require.Equal(t, prt.ID, answer.UserID)
+		require.Equal(t, prt.UserID, answer.UserID)
 		require.Equal(t, "random answer", answer.Text)
 		require.Equal(t, 2, answer.State)
 
@@ -88,7 +88,7 @@ func TestBot_Process(t *testing.T) {
 		require.NotNil(t, processed)
 		require.NotNil(t, answer)
 
-		require.Equal(t, prt.ID, answer.UserID)
+		require.Equal(t, prt.UserID, answer.UserID)
 		require.Equal(t, "4", answer.Text)
 		require.Equal(t, 2, answer.State)
 
@@ -107,7 +107,7 @@ func TestBot_Process(t *testing.T) {
 		require.NotNil(t, processed)
 		require.NotNil(t, answer)
 
-		require.Equal(t, prt.ID, answer.UserID)
+		require.Equal(t, prt.UserID, answer.UserID)
 		require.Equal(t, "3", answer.Text)
 		require.Equal(t, 2, answer.State)
 
@@ -127,7 +127,7 @@ func TestBot_Process(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, answer)
 
-		require.Equal(t, prt.ID, answer.UserID)
+		require.Equal(t, prt.UserID, answer.UserID)
 		require.Equal(t, "0", answer.Text)
 		require.Equal(t, 2, answer.State)
 
@@ -145,7 +145,7 @@ func TestBot_Process(t *testing.T) {
 		require.Len(t, processed, 1)
 		require.Equal(t, 6, processed[0].State)
 
-		require.Equal(t, prt.ID, answer.UserID)
+		require.Equal(t, prt.UserID, answer.UserID)
 		require.Equal(t, "answer", answer.Text)
 		require.Equal(t, 5, answer.State)
 
