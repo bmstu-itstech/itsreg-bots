@@ -3,23 +3,24 @@ package interfaces
 import (
 	"context"
 	"fmt"
-	"github.com/bmstu-itstech/itsreg-bots/internal/domain/bots"
+
+	"github.com/bmstu-itstech/itsreg-bots/internal/processor/domain/bots"
 )
 
 type BotNotFoundError struct {
-	uuid string
+	UUID string
 }
 
 func (e BotNotFoundError) Error() string {
-	return fmt.Sprintf("bot not found: %s", e.uuid)
+	return fmt.Sprintf("bot not found: %s", e.UUID)
 }
 
 type BotAlreadyExistsError struct {
-	uuid string
+	UUID string
 }
 
 func (e BotAlreadyExistsError) Error() string {
-	return fmt.Sprintf("bot already exists: %s", e.uuid)
+	return fmt.Sprintf("bot already exists: %s", e.UUID)
 }
 
 type BotsRepository interface {
@@ -28,7 +29,7 @@ type BotsRepository interface {
 	Update(
 		ctx context.Context,
 		uuid string,
-		updateFn func(context.Context, *bots.Bot) (*bots.Bot, error),
+		updateFn func(context.Context, *bots.Bot) error,
 	) error
 	Delete(ctx context.Context, uuid string) error
 }

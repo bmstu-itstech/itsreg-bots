@@ -16,6 +16,30 @@ func (b Block) IsZero() bool {
 	return b.Type.IsZero()
 }
 
+func NewBlock(
+	blockType string,
+	state int,
+	nextState int,
+	options []Option,
+	title string,
+	text string,
+) (Block, error) {
+	bt, err := NewBlockTypeFromString(blockType)
+	if err != nil {
+		return Block{}, err
+	}
+
+	switch bt {
+	case MessageBlock:
+		return NewMessageBlock(state, nextState, title, text)
+	case QuestionBlock:
+		return NewQuestionBlock(state, nextState, title, text)
+	case SelectionBlock:
+		return NewSelectionBlock(state, nextState, options, title, text)
+	}
+	return Block{}, errors.New("unknown type")
+}
+
 func NewMessageBlock(
 	state int,
 	next int,

@@ -9,7 +9,8 @@ import (
 )
 
 type Bot struct {
-	UUID string
+	UUID   string
+	Status Status
 
 	Blocks     map[int]Block
 	StartState int
@@ -59,13 +60,9 @@ func NewBot(
 		return nil, err
 	}
 
-	//err = traverse(startState, mappedBlocks)
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	return &Bot{
 		UUID:       uuid,
+		Status:     Stopped,
 		Blocks:     mappedBlocks,
 		StartState: startState,
 		Name:       name,
@@ -89,94 +86,6 @@ func mapBlocks(blocks []Block) (map[int]Block, error) {
 	return mapped, nil
 }
 
-type color int
-
-const (
-	white color = iota
-	grey
-	black
-)
-
-type vertex struct {
-	Block Block
-	Color color
-}
-
-func traverse(
-	startState int,
-	blocks map[int]Block,
-) error {
-	vertices := map[int]vertex{}
-
-	for state, block := range blocks {
-		vertices[state] = vertex{
-			Block: block,
-			Color: white,
-		}
-	}
-
-	start, ok := vertices[startState]
-	if !ok {
-		return cerrors.NewIncorrectInputError(
-			fmt.Sprintf("block with state %d not found", startState),
-			"invalid-blocks",
-		)
-	}
-
-	err := dfs(start, vertices)
-	if err != nil {
-		return err
-	}
-
-	for state, v := range vertices {
-		if v.Color == white {
-			return cerrors.NewIncorrectInputError(
-				fmt.Sprintf("block with state %d is unused", state),
-				"invalid-blocks",
-			)
-		}
-	}
-
-	return nil
-}
-
-func dfs(
-	current vertex,
-	vertices map[int]vertex,
-) error {
-	current.Color = grey
-
-	for _, opt := range current.Block.Options {
-		nextState := opt.Next
-		if nextState == 0 {
-			continue
-		}
-
-		next, ok := vertices[nextState]
-		if !ok {
-			return cerrors.NewIncorrectInputError(
-				fmt.Sprintf("block with state %d not found", nextState),
-				"invalid-blocks",
-			)
-		}
-
-		if next.Color == white {
-			err := dfs(next, vertices)
-			if err != nil {
-				return err
-			}
-		} else {
-			return cerrors.NewIncorrectInputError(
-				"recursion detected",
-				"invalid-blocks",
-			)
-		}
-		next.Color = black
-	}
-
-	return nil
-}
-
 func MustNewBot(
 	uuid string,
 	blocks []Block,
@@ -193,6 +102,7 @@ func MustNewBot(
 
 func NewBotFromDB(
 	uuid string,
+	status string,
 	blocks []Block,
 	startState int,
 	name string,
@@ -202,6 +112,15 @@ func NewBotFromDB(
 ) (*Bot, error) {
 	if uuid == "" {
 		return nil, errors.New("missing uuid")
+	}
+
+	if status == "" {
+		return nil, errors.New("missing status")
+	}
+
+	s, err := NewStatusFromString(status)
+	if err != nil {
+		return nil, err
 	}
 
 	if blocks == nil {
@@ -235,6 +154,7 @@ func NewBotFromDB(
 
 	return &Bot{
 		UUID:       uuid,
+		Status:     s,
 		Blocks:     mappedBlocks,
 		StartState: startState,
 		Name:       name,
