@@ -14,7 +14,7 @@ type participantID struct {
 }
 
 type mockParticipantsRepository struct {
-	sync.Mutex
+	sync.RWMutex
 	m map[participantID]bots.Participant
 }
 
@@ -22,9 +22,26 @@ func NewMockParticipantsRepository() interfaces.ParticipantRepository {
 	return &mockParticipantsRepository{m: make(map[participantID]bots.Participant)}
 }
 
+func (r *mockParticipantsRepository) ParticipantsOfBot(
+	ctx context.Context,
+	botUUID string,
+) ([]*bots.Participant, error) {
+	r.RLock()
+	defer r.RUnlock()
+
+	prts := make([]*bots.Participant, 0)
+	for _, p := range r.m {
+		if p.BotUUID == botUUID {
+			prts = append(prts, &p)
+		}
+	}
+
+	return prts, nil
+}
+
 func (r *mockParticipantsRepository) UpdateOrCreate(
 	ctx context.Context,
-	bot *bots.Bot,
+	botUUID string,
 	userID int64,
 	updateFn func(ctx context.Context, prt *bots.Participant) error,
 ) error {
@@ -32,12 +49,12 @@ func (r *mockParticipantsRepository) UpdateOrCreate(
 	defer r.Unlock()
 
 	id := participantID{
-		BotUUID: bot.UUID,
+		BotUUID: botUUID,
 		UserID:  userID,
 	}
 	prt, ok := r.m[id]
 	if !ok {
-		newPrt, err := bots.NewParticipant(userID, bot.StartState)
+		newPrt, err := bots.NewParticipant(botUUID, userID)
 		if err != nil {
 			return err
 		}
@@ -45,5 +62,12 @@ func (r *mockParticipantsRepository) UpdateOrCreate(
 		prt = *newPrt
 	}
 
-	return updateFn(ctx, &prt)
+	err := updateFn(ctx, &prt)
+	if err != nil {
+		return err
+	}
+
+	r.m[id] = prt
+
+	return nil
 }

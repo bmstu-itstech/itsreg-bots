@@ -7,9 +7,10 @@ import (
 )
 
 type ParticipantRepository interface {
+	ParticipantsOfBot(ctx context.Context, botUUID string) ([]*bots.Participant, error)
 	UpdateOrCreate(
 		ctx context.Context,
-		bot *bots.Bot,
+		botUUID string,
 		userID int64,
 		updateFn func(context.Context, *bots.Participant) error,
 	) error
