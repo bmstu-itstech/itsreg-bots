@@ -35,7 +35,7 @@ func NewBot(
 		return nil, commonerrs.NewInvalidInputError("expected not empty entries")
 	}
 
-	if blocks == nil {
+	if len(blocks) == 0 {
 		return nil, commonerrs.NewInvalidInputError("expected not empty blocks")
 	}
 
@@ -47,15 +47,26 @@ func NewBot(
 		return nil, commonerrs.NewInvalidInputError("expected not empty token")
 	}
 
-	for _, block := range blocks {
-		if block.IsZero() {
-			return nil, fmt.Errorf("block with state %d is empty", block.State)
+	for _, entry := range entries {
+		if entry.IsZero() {
+			return nil, commonerrs.NewInvalidInputError("expected not empty entry")
 		}
 	}
 
-	bs := make(map[int]Block)
+	es, err := mapEntries(entries)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, block := range blocks {
-		bs[block.State] = block
+		if block.IsZero() {
+			return nil, commonerrs.NewInvalidInputError("expected not empty block")
+		}
+	}
+
+	bs, err := mapBlocks(blocks)
+	if err != nil {
+		return nil, err
 	}
 
 	vs := vertices(bs)
@@ -68,11 +79,6 @@ func NewBot(
 
 	if whiteVertexState := findWhiteVertex(vs); whiteVertexState > 0 {
 		return nil, newUnusedBlockFoundError(whiteVertexState)
-	}
-
-	es := make(map[string]EntryPoint)
-	for _, entry := range entries {
-		es[entry.Key] = entry
 	}
 
 	return &Bot{
@@ -187,6 +193,48 @@ func (b *Bot) Entries() []EntryPoint {
 		entries = append(entries, entry)
 	}
 	return entries
+}
+
+func (b *Bot) SetBlocks(entries []EntryPoint, blocks []Block) error {
+	for _, entry := range entries {
+		if entry.IsZero() {
+			return commonerrs.NewInvalidInputError("expected not empty entry")
+		}
+	}
+
+	es, err := mapEntries(entries)
+	if err != nil {
+		return err
+	}
+
+	for _, block := range blocks {
+		if block.IsZero() {
+			return commonerrs.NewInvalidInputError("expected not empty block")
+		}
+	}
+
+	bs, err := mapBlocks(blocks)
+	if err != nil {
+		return err
+	}
+
+	vs := vertices(bs)
+	for _, entry := range entries {
+		err := colorizeVertices(vs, entry.State)
+		if err != nil {
+			return err
+		}
+	}
+
+	if whiteVertexState := findWhiteVertex(vs); whiteVertexState > 0 {
+		return newUnusedBlockFoundError(whiteVertexState)
+	}
+
+	b.blocks = bs
+	b.entryPoints = es
+	b.UpdatedAt = time.Now()
+
+	return nil
 }
 
 type vertex struct {

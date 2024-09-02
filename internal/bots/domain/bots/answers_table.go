@@ -25,14 +25,18 @@ type mapStateToIndex map[int]int
 func thead(bot *Bot) ([]string, mapStateToIndex) {
 	blocks := bot.Blocks()
 
-	head := make([]string, len(blocks)+1)
+	head := make([]string, 0, len(blocks)+1)
 	m := make(mapStateToIndex)
 
-	head[0] = userIDColumnName
+	head = append(head, userIDColumnName)
 
-	for i, block := range blocks {
-		head[i+1] = block.Title
-		m[block.State] = i
+	i := 1
+	for _, block := range blocks {
+		if block.Type != MessageBlock {
+			head = append(head, block.Title)
+			m[block.State] = i
+			i++
+		}
 	}
 
 	return head, m
@@ -42,8 +46,10 @@ func trow(prt *Participant, m mapStateToIndex) []string {
 	row := make([]string, len(m)+1)
 	row[0] = strconv.FormatInt(prt.UserID, 10)
 	for _, ans := range prt.Answers() {
-		i := m[ans.State]
-		row[i+1] = ans.Text
+		i, ok := m[ans.State]
+		if ok {
+			row[i] = ans.Text
+		}
 	}
 	return row
 }
