@@ -3,13 +3,18 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/bmstu-itstech/itsreg-bots/internal/common/logs"
 	"log/slog"
 	"net"
 	"os"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
+
+	"github.com/bmstu-itstech/itsreg-bots/internal/common/logs"
 )
 
 func RunGRPCServer(registerServer func(server *grpc.Server)) {
@@ -30,18 +35,20 @@ func RunGRPCServerOnAddr(addr string, registerServer func(server *grpc.Server)) 
 		),
 	}
 
-	/*recoveryOpts := []recovery.Option{
+	recoveryOpts := []recovery.Option{
 		recovery.WithRecoveryHandler(func(p interface{}) (err error) {
 			logger.Error("Recovered from panic", slog.Any("panic", p))
 
 			return status.Errorf(codes.Internal, "internal error")
 		}),
-	}*/
+	}
 
 	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(
-		//recovery.UnaryServerInterceptor(recoveryOpts...),
+		recovery.UnaryServerInterceptor(recoveryOpts...),
 		logging.UnaryServerInterceptor(InterceptorLogger(logger), loggingOpts...),
 	))
+
+	reflection.Register(grpcServer)
 
 	registerServer(grpcServer)
 

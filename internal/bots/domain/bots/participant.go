@@ -56,16 +56,13 @@ func NewParticipantFromDB(
 		return nil, commonerrs.NewInvalidInputError("expected not empty id")
 	}
 
-	if answers == nil {
-		answers = make([]Answer, 0)
-	}
-
 	m := make(map[int]Answer)
 	for _, a := range answers {
 		m[a.State] = a
 	}
 
 	return &Participant{
+		BotUUID: botUUID,
 		UserID:  id,
 		State:   state,
 		answers: m,
@@ -89,7 +86,7 @@ func (p *Participant) SwitchTo(state int) {
 }
 
 func (p *Participant) AddAnswer(text string) error {
-	ans, err := NewAnswer(p.UserID, p.State, text)
+	ans, err := NewAnswer(p.State, text)
 	if err != nil {
 		return err
 	}

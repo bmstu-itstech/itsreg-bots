@@ -5,16 +5,11 @@ import (
 )
 
 type Answer struct {
-	UserID int64
-	State  int
-	Text   string
+	State int
+	Text  string
 }
 
-func NewAnswer(userID int64, state int, text string) (Answer, error) {
-	if userID == 0 {
-		return Answer{}, errors.New("missing id")
-	}
-
+func NewAnswer(state int, text string) (Answer, error) {
 	if state == 0 {
 		return Answer{}, errors.New("missing state")
 	}
@@ -24,14 +19,13 @@ func NewAnswer(userID int64, state int, text string) (Answer, error) {
 	}
 
 	return Answer{
-		UserID: userID,
-		State:  state,
-		Text:   text,
+		State: state,
+		Text:  text,
 	}, nil
 }
 
-func MustNewAnswer(userID int64, state int, text string) Answer {
-	a, err := NewAnswer(userID, state, text)
+func MustNewAnswer(state int, text string) Answer {
+	a, err := NewAnswer(state, text)
 	if err != nil {
 		panic(err)
 	}

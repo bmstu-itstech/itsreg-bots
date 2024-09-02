@@ -11,6 +11,6 @@ type SenderService interface {
 		ctx context.Context,
 		botUUID string,
 		userID int64,
-		message bots.Message,
+		msg bots.Message,
 	) error
 }
