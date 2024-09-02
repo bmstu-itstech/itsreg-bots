@@ -12,10 +12,11 @@ type Application struct {
 
 type Commands struct {
 	CreateBot command.CreateBotHandler
+	Entry     command.EntryHandler
 	Process   command.ProcessHandler
 }
 
 type Queries struct {
-	AllAnswers query.AllAnswersHandler
+	AllAnswers query.GetAnswersTableHandler
 	GetBot     query.GetBotHandler
 }

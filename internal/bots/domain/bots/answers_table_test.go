@@ -17,20 +17,29 @@ func TestNewTable(t *testing.T) {
 		// | 10     | Ivan       | Ivanov    |
 		// | 11     | John       |           |
 		// +--------+------------+-----------+
+		entries := []bots.EntryPoint{
+			bots.MustNewEntryPoint("start", 1),
+		}
 		blocks := []bots.Block{
 			bots.MustNewQuestionBlock(1, 2, "First name", "What is your first name?"),
 			bots.MustNewQuestionBlock(2, 0, "Last name", "What is your last name?"),
 		}
-		bot := bots.MustNewBot(uuid.NewString(), blocks, 1, "Test bot", "xxx-yyy")
+		botUUID := uuid.NewString()
+		bot := bots.MustNewBot(botUUID, entries, blocks, "Test bot", "xxx-yyy")
 
-		answers := []bots.Answer{
-			bots.MustNewAnswer(10, 1, "Ivan"),
-			bots.MustNewAnswer(11, 1, "John"),
-			bots.MustNewAnswer(10, 2, "Ivanov"),
-		}
+		ivan := bots.MustNewParticipant(botUUID, 10)
+		ivan.SwitchTo(1)
+		require.NoError(t, ivan.AddAnswer("Ivan"))
+		ivan.SwitchTo(2)
+		require.NoError(t, ivan.AddAnswer("Ivanov"))
 
-		table, err := bots.NewTable(bot, answers)
-		require.NoError(t, err)
+		john := bots.MustNewParticipant(botUUID, 11)
+		john.SwitchTo(1)
+		require.NoError(t, john.AddAnswer("John"))
+
+		participants := []*bots.Participant{ivan, john}
+
+		table := bots.NewAnswersTable(bot, participants)
 		require.NotNil(t, table)
 
 		require.Equal(t, [][]string{

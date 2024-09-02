@@ -2,9 +2,10 @@ package mocks
 
 import (
 	"context"
+	"sync"
+
 	"github.com/bmstu-itstech/itsreg-bots/internal/bots/domain/bots"
 	"github.com/bmstu-itstech/itsreg-bots/internal/bots/domain/interfaces"
-	"sync"
 )
 
 type mockBotRepository struct {
@@ -54,10 +55,17 @@ func (r *mockBotRepository) Update(
 		return interfaces.BotNotFoundError{UUID: uuid}
 	}
 
-	return updateFn(ctx, &b)
+	err := updateFn(ctx, &b)
+	if err != nil {
+		return err
+	}
+
+	r.m[uuid] = b
+
+	return nil
 }
 
-func (r *mockBotRepository) Delete(ctx context.Context, uuid string) error {
+func (r *mockBotRepository) Delete(_ context.Context, uuid string) error {
 	r.Lock()
 	defer r.Unlock()
 

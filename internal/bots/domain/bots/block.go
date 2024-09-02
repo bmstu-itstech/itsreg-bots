@@ -146,7 +146,7 @@ func NewSelectionBlock(
 	}
 
 	return Block{
-		Type:      QuestionBlock,
+		Type:      SelectionBlock,
 		State:     state,
 		NextState: next,
 		Options:   options,
@@ -206,4 +206,31 @@ func NewBlockFromDB(
 		Title:     title,
 		Text:      text,
 	}, nil
+}
+
+func (b Block) Message() (Message, error) {
+	switch b.Type {
+	case MessageBlock, QuestionBlock:
+		return NewPlainMessage(b.Text)
+	case SelectionBlock:
+		return NewMessageWithButtons(b.Text, b.Options)
+	}
+	return Message{}, errors.New("unknown type")
+}
+
+func (b Block) IsFinish() bool {
+	return len(b.Options) == 0 && b.NextState == 0
+}
+
+func (b Block) ChildrenStates() []int {
+	states := make([]int, 0)
+	if b.NextState != 0 {
+		states = append(states, b.NextState)
+	}
+
+	for _, opt := range b.Options {
+		states = append(states, opt.Next)
+	}
+
+	return states
 }

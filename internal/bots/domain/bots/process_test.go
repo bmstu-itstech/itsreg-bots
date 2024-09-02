@@ -1,6 +1,7 @@
 package bots_test
 
 import (
+	"math/rand/v2"
 	"testing"
 
 	"github.com/google/uuid"
@@ -10,118 +11,161 @@ import (
 )
 
 func TestBot_Process(t *testing.T) {
-	startState := 1
+	/*
+		TEST BOT SCHEME
+		            4
+		          /   \
+		          \   /
+		1 --> 2 --> 3 --> 5 --> 6 --> 0
+		             \
+		              \ --> 7 --> 0
+	*/
+	greetingBlock := bots.MustNewMessageBlock(1, 2, "Greeting", "Hello, user!")
+	usernameBlock := bots.MustNewQuestionBlock(2, 3, "User's name", "What's your name?")
+	selectionBlock := bots.MustNewSelectionBlock(3, 4, []bots.Option{
+		bots.MustNewOption("To 5", 5),
+		bots.MustNewOption("To 7", 7),
+	}, "Next", "Choose next step")
+	errorBlock := bots.MustNewMessageBlock(4, 3, "Error", "Choose one option!")
+	redirectBlock := bots.MustNewMessageBlock(5, 6, "Redirect", "Redirecting to block 6...")
+	endMessageBlock := bots.MustNewMessageBlock(6, 0, "End", "End message")
+	endQuestionBlock := bots.MustNewQuestionBlock(7, 0, "End", "End question")
+
 	blocks := []bots.Block{
-		bots.MustNewQuestionBlock(startState, 2, "Question 1", "Some text"),
-		bots.MustNewSelectionBlock(2, 2, []bots.Option{
-			bots.MustNewOption("3", 3),
-			bots.MustNewOption("4", 4),
-			bots.MustNewOption("5", 5),
-			bots.MustNewOption("0", 0),
-		}, "Selection", "Some text"),
-		bots.MustNewMessageBlock(3, 4, "Message 3", "Some text"),
-		bots.MustNewMessageBlock(4, 5, "Message 4", "Some text"),
-		bots.MustNewQuestionBlock(5, 6, "Question 5", "Some text"),
-		bots.MustNewMessageBlock(6, 0, "Message 6", "Some text"),
+		greetingBlock,
+		usernameBlock,
+		selectionBlock,
+		errorBlock,
+		redirectBlock,
+		endMessageBlock,
+		endQuestionBlock,
 	}
-	bot := bots.MustNewBot(uuid.NewString(), blocks, startState, "Test bot", "xxx-yyy")
+	entries := []bots.EntryPoint{
+		bots.MustNewEntryPoint("start", 1),
+	}
+	botUUID := uuid.NewString()
+	bot := bots.MustNewBot(botUUID, entries, blocks, "Test bot", "random token")
 
-	t.Run("should process question block", func(t *testing.T) {
-		prt := bots.MustNewParticipant(1, startState)
+	t.Run("should entry bot", func(t *testing.T) {
+		userID := rand.Int64()
+		prt := bots.MustNewParticipant(botUUID, userID)
 
-		processed, err := bot.Process(prt, "random answer")
+		resp, err := bot.Entry(prt, "start")
 		require.NoError(t, err)
-		require.NotNil(t, processed)
-
-		require.Len(t, processed, 1)
-		require.Equal(t, 2, processed[0].State)
-
-		require.Equal(t, 2, prt.State)
+		requireMessages(t, []bots.Message{
+			bots.MustNewPlainMessage(greetingBlock.Text),
+			bots.MustNewPlainMessage(usernameBlock.Text),
+		}, resp)
+		requireAnswers(t, []bots.Answer{}, prt.Answers())
 	})
 
-	t.Run("should process option of selection block", func(t *testing.T) {
-		prt := bots.MustNewParticipant(1, 2)
+	t.Run("should process answer for question", func(t *testing.T) {
+		userID := rand.Int64()
+		prt := bots.MustNewParticipant(botUUID, userID)
+		prt.SwitchTo(2)
 
-		processed, err := bot.Process(prt, "5")
+		name := "Ivan"
+		resp, err := bot.Process(prt, name)
 		require.NoError(t, err)
-		require.NotNil(t, processed)
-
-		require.Len(t, processed, 1)
-		require.Equal(t, 5, processed[0].State)
-
-		require.Equal(t, 5, prt.State)
+		requireMessages(t, []bots.Message{
+			bots.MustNewMessageWithButtons(selectionBlock.Text, selectionBlock.Options),
+		}, resp)
+		requireAnswers(t, []bots.Answer{
+			bots.MustNewAnswer(userID, 2, name),
+		}, prt.Answers())
 	})
 
-	t.Run("should process unconditional branch of selection block", func(t *testing.T) {
-		prt := bots.MustNewParticipant(1, 2)
+	t.Run("should recursively return to block", func(t *testing.T) {
+		userID := rand.Int64()
+		prt := bots.MustNewParticipant(botUUID, userID)
+		prt.SwitchTo(3)
 
-		processed, err := bot.Process(prt, "random answer")
+		invalidAnswer := "invalid option"
+		resp, err := bot.Process(prt, invalidAnswer)
 		require.NoError(t, err)
-		require.NotNil(t, processed)
-
-		require.Len(t, processed, 1)
-		require.Equal(t, 2, processed[0].State)
-
-		require.Equal(t, 2, prt.State)
+		requireMessages(t, []bots.Message{
+			bots.MustNewPlainMessage(errorBlock.Text),
+			bots.MustNewMessageWithButtons(selectionBlock.Text, selectionBlock.Options),
+		}, resp)
+		requireAnswers(t, []bots.Answer{
+			bots.MustNewAnswer(userID, 3, invalidAnswer),
+		}, prt.Answers())
 	})
 
-	t.Run("should process message block", func(t *testing.T) {
-		prt := bots.MustNewParticipant(1, 2)
+	t.Run("should overwrite answer", func(t *testing.T) {
+		userID := rand.Int64()
+		prt := bots.MustNewParticipant(botUUID, userID)
+		prt.SwitchTo(3)
 
-		processed, err := bot.Process(prt, "4")
-		require.NoError(t, err)
-		require.NotNil(t, processed)
-
-		require.Len(t, processed, 2)
-		require.Equal(t, 4, processed[0].State)
-		require.Equal(t, 5, processed[1].State)
-
-		require.Equal(t, 5, prt.State)
-	})
-
-	t.Run("should process some message blocks", func(t *testing.T) {
-		prt := bots.MustNewParticipant(1, 2)
-
-		processed, err := bot.Process(prt, "3")
-		require.NoError(t, err)
-		require.NotNil(t, processed)
-
-		require.Len(t, processed, 3)
-		require.Equal(t, 3, processed[0].State)
-		require.Equal(t, 4, processed[1].State)
-		require.Equal(t, 5, processed[2].State)
-
-		require.Equal(t, 5, prt.State)
-	})
-
-	t.Run("should finish bots script", func(t *testing.T) {
-		prt := bots.MustNewParticipant(1, 2)
-
-		processed, err := bot.Process(prt, "0")
-		require.Len(t, processed, 0)
+		invalidAnswer := "invalid option"
+		_, err := bot.Process(prt, invalidAnswer)
 		require.NoError(t, err)
 
-		require.Equal(t, 0, prt.State)
+		validAnswer := "To 7"
+		_, err = bot.Process(prt, validAnswer)
+		requireAnswers(t, []bots.Answer{
+			bots.MustNewAnswer(userID, 3, validAnswer),
+		}, prt.Answers())
 	})
 
-	t.Run("should process message block and finish", func(t *testing.T) {
-		prt := bots.MustNewParticipant(1, 5)
+	t.Run("should end bot", func(t *testing.T) {
+		userID := rand.Int64()
+		prt := bots.MustNewParticipant(botUUID, userID)
+		prt.SwitchTo(3)
 
-		processed, err := bot.Process(prt, "answer")
-		require.NotNil(t, processed)
+		resp, err := bot.Process(prt, "To 5")
+		require.NoError(t, err)
+		requireMessages(t, []bots.Message{
+			bots.MustNewPlainMessage(redirectBlock.Text),
+			bots.MustNewPlainMessage(endMessageBlock.Text),
+		}, resp)
+		requireAnswers(t, []bots.Answer{
+			bots.MustNewAnswer(userID, 3, "To 5"),
+		}, prt.Answers())
+	})
+
+	t.Run("should end bot after question", func(t *testing.T) {
+		userID := rand.Int64()
+		prt := bots.MustNewParticipant(botUUID, userID)
+		prt.SwitchTo(7)
+
+		resp, err := bot.Process(prt, "something")
+		require.NoError(t, err)
+		requireMessages(t, []bots.Message{}, resp)
+		requireAnswers(t, []bots.Answer{
+			bots.MustNewAnswer(userID, 7, "something"),
+		}, prt.Answers())
+	})
+
+	t.Run("should clear answers if user re-entry bot", func(t *testing.T) {
+		userID := rand.Int64()
+		prt := bots.MustNewParticipant(botUUID, userID)
+
+		_, err := bot.Entry(prt, "start")
 		require.NoError(t, err)
 
-		require.Len(t, processed, 1)
-		require.Equal(t, 6, processed[0].State)
-
-		require.Equal(t, 0, prt.State)
-	})
-
-	t.Run("should ignore if participant already finished", func(t *testing.T) {
-		prt := bots.MustNewParticipant(1, bots.FinishState)
-
-		processed, err := bot.Process(prt, "answer")
-		require.Len(t, processed, 0)
+		_, err = bot.Process(prt, "Ivan")
 		require.NoError(t, err)
+		requireAnswers(t, []bots.Answer{
+			bots.MustNewAnswer(userID, 2, "Ivan"),
+		}, prt.Answers())
+
+		_, err = bot.Entry(prt, "start")
+		require.NoError(t, err)
+		requireAnswers(t, []bots.Answer{}, prt.Answers())
 	})
+}
+
+func requireMessages(t *testing.T, expected []bots.Message, actual []bots.Message) {
+	require.Lenf(t, actual, len(expected), "expected %d messages, got %d", len(expected), len(actual))
+	for i, msg := range actual {
+		require.Truef(t, expected[i].Equal(msg), "expected message %v, got %v", expected[i], msg)
+	}
+}
+
+func requireAnswers(t *testing.T, expected []bots.Answer, actual []bots.Answer) {
+	require.Lenf(t, actual, len(expected), "expected %d answers, got %d", len(expected), len(actual))
+	for i, ans := range actual {
+		require.Equalf(t, expected[i], ans, "expected answer %v, got %v", expected[i], ans)
+	}
 }

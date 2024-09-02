@@ -13,41 +13,65 @@ func (b Block) Process(text string) int {
 func (b *Bot) Process(
 	prt *Participant,
 	text string,
-) ([]Block, error) {
-	if prt.IsFinished() {
-		return make([]Block, 0), nil
+) ([]Message, error) {
+	messages := make([]Message, 0)
+
+	if !prt.IsProcessing() {
+		return messages, nil
 	}
 
-	processed := make([]Block, 0, 1)
+	current := b.blocks[prt.State]
 
-	current := b.Blocks[prt.State]
+	if current.Type != MessageBlock {
+		err := prt.AddAnswer(text)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	nextState := current.Process(text)
 	prt.SwitchTo(nextState)
 
-	next := b.Blocks[nextState]
-	if !next.IsZero() {
-		processed = append(processed, next)
-	}
-
-	var ans Answer
-	if current.Type != MessageBlock {
-		var err error
-		ans, err = NewAnswer(prt.UserID, current.State, text)
+	next, ok := b.blocks[nextState]
+	if ok {
+		message, err := next.Message()
 		if err != nil {
 			return nil, err
 		}
-		prt.AddAnswer(ans)
+		messages = append(messages, message)
 	}
 
 	if next.Type == MessageBlock {
-		bs, err := b.Process(prt, "")
+		ms, err := b.Process(prt, "")
 		if err != nil {
 			return nil, err
 		}
-		processed = append(processed, bs...)
-		return processed, nil
+		messages = append(messages, ms...)
 	}
 
-	return processed, nil
+	return messages, nil
+}
+
+func (b *Bot) processStart(
+	prt *Participant,
+) ([]Message, error) {
+	messages := make([]Message, 0, 1)
+
+	start := b.blocks[prt.State]
+
+	msg, err := start.Message()
+	if err != nil {
+		return nil, err
+	}
+	messages = append(messages, msg)
+
+	if start.Type == MessageBlock {
+		ms, err := b.Process(prt, "")
+		if err != nil {
+			return nil, err
+		}
+		messages = append(messages, ms...)
+	}
+
+	return messages, nil
 }

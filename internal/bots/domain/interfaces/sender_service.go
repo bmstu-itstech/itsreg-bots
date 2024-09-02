@@ -7,5 +7,10 @@ import (
 )
 
 type SenderService interface {
-	Send(ctx context.Context, block *bots.Block) error
+	Send(
+		ctx context.Context,
+		botUUID string,
+		userID int64,
+		message bots.Message,
+	) error
 }
