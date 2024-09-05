@@ -68,21 +68,6 @@ func MustNewMessageWithButtons(
 	return m
 }
 
-func UnmarshalMessage(text string, buttons []string) (Message, error) {
-	if text == "" {
-		return Message{}, commonerrs.NewInvalidInputError("expected not empty message text")
-	}
-
-	if buttons == nil {
-		buttons = make([]string, 0)
-	}
-
-	return Message{
-		Text:    text,
-		Buttons: buttons,
-	}, nil
-}
-
 func (m Message) Equal(o Message) bool {
 	return m.Text == o.Text && buttonsEqual(m.Buttons, o.Buttons)
 }

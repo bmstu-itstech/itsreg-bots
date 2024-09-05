@@ -22,7 +22,7 @@ func NewMockParticipantsRepository() bots.ParticipantRepository {
 }
 
 func (r *mockParticipantsRepository) ParticipantsOfBot(
-	ctx context.Context,
+	_ context.Context,
 	botUUID string,
 ) ([]*bots.Participant, error) {
 	r.RLock()

@@ -45,7 +45,7 @@ func NewAmqpMessagesPublisher() (bots.MessagesPublisher, <-chan *message.Message
 	}, messages, nil
 }
 
-func (s *amqpMessagesPublisher) Publish(ctx context.Context, botUUID string, userID int64, msg bots.Message) error {
+func (s *amqpMessagesPublisher) Publish(_ context.Context, botUUID string, userID int64, msg bots.Message) error {
 	dto := mapMessageToDTO(botUUID, userID, msg)
 
 	b, err := json.Marshal(dto)

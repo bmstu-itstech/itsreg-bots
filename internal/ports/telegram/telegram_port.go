@@ -54,7 +54,7 @@ func RunTelegramPort(
 	wg.Wait()
 }
 
-func (p *Port) handleBotMessage(ctx context.Context, msg botMessage) error {
+func (p *Port) handleBotMessage(_ context.Context, msg botMessage) error {
 	tgBot, ok := p.bots[msg.BotUUID]
 	if !ok {
 		err := fmt.Errorf("bot not found: %s", msg.BotUUID)
