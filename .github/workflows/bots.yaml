@@ -1,0 +1,27 @@
+name: Bots CI
+
+on:
+  push
+
+jobs:
+  test:
+    name: "Unit test"
+    runs-on: "ubuntu-latest"
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+      - name: Install dependencies
+        run: go mod tidy
+      - name: Test with Go
+        run: go test ./... -short -json > test-results.json
+        env:
+          PORT: 8400
+      - name: Upload Go test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: Go-results
+          path: test-results.json
