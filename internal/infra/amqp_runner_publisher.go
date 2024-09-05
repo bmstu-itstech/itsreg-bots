@@ -52,7 +52,7 @@ func (s *amqpRunnerPublisher) PublishStop(ctx context.Context, botUUID string) e
 	return s.publish(ctx, botUUID, "stop")
 }
 
-func (s *amqpRunnerPublisher) publish(ctx context.Context, botUUID string, command string) error {
+func (s *amqpRunnerPublisher) publish(_ context.Context, botUUID string, command string) error {
 	dto := amqpRunnerMessage{
 		BotUUID: botUUID,
 		Command: command,

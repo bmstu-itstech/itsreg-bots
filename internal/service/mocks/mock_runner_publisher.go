@@ -38,7 +38,7 @@ func (s *mockRunnerPublisher) PublishStop(ctx context.Context, botUUID string) e
 	return s.publish(ctx, botUUID, "stop")
 }
 
-func (s *mockRunnerPublisher) publish(ctx context.Context, botUUID string, command string) error {
+func (s *mockRunnerPublisher) publish(_ context.Context, botUUID string, command string) error {
 	b, err := json.Marshal(runnerMessage{
 		BotUUID: botUUID,
 		Command: command,

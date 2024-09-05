@@ -31,7 +31,7 @@ func NewMockMessagesPublisher() (bots.MessagesPublisher, <-chan *message.Message
 }
 
 func (s *mockSenderService) Publish(
-	ctx context.Context,
+	_ context.Context,
 	botUUID string,
 	userID int64,
 	msg bots.Message,
