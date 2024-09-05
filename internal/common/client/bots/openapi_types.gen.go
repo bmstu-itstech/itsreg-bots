@@ -14,6 +14,13 @@ const (
 	Selection BlockType = "selection"
 )
 
+// Defines values for BotStatus.
+const (
+	Failed  BotStatus = "failed"
+	Started BotStatus = "started"
+	Stopped BotStatus = "stopped"
+)
+
 // Block defines model for Block.
 type Block struct {
 	NextState int       `json:"nextState"`
@@ -34,9 +41,13 @@ type Bot struct {
 	CreatedAt time.Time    `json:"createdAt"`
 	Entries   []EntryPoint `json:"entries"`
 	Name      string       `json:"name"`
+	Status    BotStatus    `json:"status"`
 	Token     string       `json:"token"`
 	UpdatedAt time.Time    `json:"updatedAt"`
 }
+
+// BotStatus defines model for Bot.Status.
+type BotStatus string
 
 // EntryPoint defines model for EntryPoint.
 type EntryPoint struct {

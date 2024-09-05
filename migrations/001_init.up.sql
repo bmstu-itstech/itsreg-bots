@@ -1,7 +1,14 @@
+DO $$ BEGIN
+    CREATE TYPE BOT_STATUS AS ENUM ('started', 'stopped', 'failed');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 CREATE TABLE IF NOT EXISTS bots (
     uuid       VARCHAR(36)  PRIMARY KEY,
     name       VARCHAR(256) NOT NULL,
     token      VARCHAR(256) NOT NULL,
+    status     BOT_STATUS   NOT NULL,
     created_at TIMESTAMP    NOT NULL,
     updated_at TIMESTAMP    NOT NULL
 );
@@ -83,5 +90,5 @@ CREATE TABLE IF NOT EXISTS answers (
     CONSTRAINT fk_block
         FOREIGN KEY ( bot_uuid, state )
             REFERENCES blocks ( bot_uuid, state )
-            ON DELETE CASCADE
+            ON DELETE NO ACTION
 );

@@ -46,9 +46,17 @@ func newTelegramBot(
 	}, nil
 }
 
-func (b *telegramBot) Start() error {
+func (b *telegramBot) Start(ctx context.Context) error {
 	conf := tg.NewUpdate(0)
 	updates, err := b.api.GetUpdatesChan(conf)
+	if err != nil {
+		return err
+	}
+
+	err = b.app.Commands.UpdateStatus.Handle(ctx, command.UpdateStatus{
+		BotUUID: b.botUUID,
+		Status:  "started",
+	})
 	if err != nil {
 		return err
 	}
@@ -58,8 +66,18 @@ func (b *telegramBot) Start() error {
 	return nil
 }
 
-func (b *telegramBot) Stop() {
+func (b *telegramBot) Stop(ctx context.Context) error {
+	err := b.app.Commands.UpdateStatus.Handle(ctx, command.UpdateStatus{
+		BotUUID: b.botUUID,
+		Status:  "stopped",
+	})
+	if err != nil {
+		return err
+	}
+
 	b.stopCh <- struct{}{}
+
+	return nil
 }
 
 func (b *telegramBot) SendMessage(toUserID int64, text string, buttons []string) error {

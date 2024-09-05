@@ -31,6 +31,7 @@ type Bot struct {
 	Blocks    []Block
 	Name      string
 	Token     string
+	Status    string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -155,6 +156,7 @@ func MapBotFromDomain(bot *bots.Bot) Bot {
 		Blocks:    MapBlocksFromDomain(bot.Blocks()),
 		Name:      bot.Name,
 		Token:     bot.Token,
+		Status:    bot.Status.String(),
 		CreatedAt: bot.CreatedAt,
 		UpdatedAt: bot.UpdatedAt,
 	}

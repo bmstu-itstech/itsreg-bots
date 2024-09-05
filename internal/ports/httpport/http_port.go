@@ -219,6 +219,7 @@ func mapBotToAPI(bot types.Bot) Bot {
 		CreatedAt: bot.CreatedAt,
 		Entries:   mapEntryPointsToAPI(bot.Entries),
 		Name:      bot.Name,
+		Status:    BotStatus(bot.Status),
 		Token:     bot.Token,
 		UpdatedAt: bot.UpdatedAt,
 	}

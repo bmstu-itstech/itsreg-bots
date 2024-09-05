@@ -13,8 +13,9 @@ type Bot struct {
 	entryPoints map[string]EntryPoint
 	blocks      map[int]Block
 
-	Name  string
-	Token string
+	Name   string
+	Token  string
+	Status Status
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -85,6 +86,7 @@ func NewBot(
 		UUID:      uuid,
 		Name:      name,
 		Token:     token,
+		Status:    Stopped,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 
@@ -113,6 +115,7 @@ func NewBotFromDB(
 	blocks []Block,
 	name string,
 	token string,
+	status string,
 	createdAt time.Time,
 	updatedAt time.Time,
 ) (*Bot, error) {
@@ -130,6 +133,10 @@ func NewBotFromDB(
 
 	if token == "" {
 		return nil, commonerrs.NewInvalidInputError("expected not empty token")
+	}
+
+	if status == "" {
+		return nil, commonerrs.NewInvalidInputError("expected not empty status")
 	}
 
 	if createdAt.IsZero() {
@@ -150,12 +157,18 @@ func NewBotFromDB(
 		return nil, err
 	}
 
+	st, err := NewStatusFromString(status)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Bot{
 		UUID:        uuid,
 		entryPoints: es,
 		blocks:      bs,
 		Name:        name,
 		Token:       token,
+		Status:      st,
 		CreatedAt:   createdAt,
 		UpdatedAt:   updatedAt,
 	}, nil
@@ -235,6 +248,10 @@ func (b *Bot) SetBlocks(entries []EntryPoint, blocks []Block) error {
 	b.UpdatedAt = time.Now()
 
 	return nil
+}
+
+func (b *Bot) SetStatus(status Status) {
+	b.Status = status
 }
 
 type vertex struct {

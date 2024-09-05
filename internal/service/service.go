@@ -77,11 +77,12 @@ func newApplication(
 ) *app.Application {
 	return &app.Application{
 		Commands: app.Commands{
-			CreateBot: command.NewCreateBotHandler(bots, logger, metricsClient),
-			StartBot:  command.NewStartBotHandler(runPub, logger, metricsClient),
-			StopBot:   command.NewStopBotHandler(runPub, logger, metricsClient),
-			Entry:     command.NewEntryHandler(bots, participants, msgPub, logger, metricsClient),
-			Process:   command.NewProcessHandler(bots, participants, msgPub, logger, metricsClient),
+			CreateBot:    command.NewCreateBotHandler(bots, logger, metricsClient),
+			StartBot:     command.NewStartBotHandler(runPub, logger, metricsClient),
+			StopBot:      command.NewStopBotHandler(runPub, logger, metricsClient),
+			UpdateStatus: command.NewUpdateStatusHandler(bots, logger, metricsClient),
+			Entry:        command.NewEntryHandler(bots, participants, msgPub, logger, metricsClient),
+			Process:      command.NewProcessHandler(bots, participants, msgPub, logger, metricsClient),
 		},
 		Queries: app.Queries{
 			AllAnswers: query.NewGetAnswersTableHandler(bots, participants, logger, metricsClient),
