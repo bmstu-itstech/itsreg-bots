@@ -188,6 +188,7 @@ components:
         - botUUID
         - name
         - token
+        - status
         - entries
         - blocks
         - createdAt
@@ -201,6 +202,12 @@ components:
           example: Example bot
         token:
           type: string
+        status:
+          type: string
+          enum:
+            - started
+            - stopped
+            - failed
         entries:
           type: array
           items:

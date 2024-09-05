@@ -189,7 +189,7 @@ func mapBlockTypeToPB(blockType string) botspb.BlockType {
 	case "selection":
 		return botspb.BlockType_BlockSelection
 	}
-	return botspb.BlockType_Unknown
+	return botspb.BlockType_BlockUnknown
 }
 
 func mapBlockFromPB(block *botspb.Block) types.Block {
@@ -230,11 +230,24 @@ func mapBlocksToPB(blocks []types.Block) []*botspb.Block {
 	return res
 }
 
+func mapStatusToPB(status string) botspb.Status {
+	switch status {
+	case "started":
+		return botspb.Status_Started
+	case "stopped":
+		return botspb.Status_Stopped
+	case "failed":
+		return botspb.Status_Failed
+	}
+	return botspb.Status_StatusUnknown
+}
+
 func mapBotToPB(bot types.Bot) *botspb.Bot {
 	return &botspb.Bot{
 		BotUUID: bot.UUID,
 		Name:    bot.Name,
 		Token:   bot.Token,
+		Status:  mapStatusToPB(bot.Status),
 		Entries: mapEntriesToPB(bot.Entries),
 		Blocks:  mapBlocksToPB(bot.Blocks),
 	}

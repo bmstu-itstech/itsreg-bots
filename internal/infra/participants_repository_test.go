@@ -94,10 +94,10 @@ func setupDBParticipants(ctx context.Context, db *sqlx.DB) error {
 	return pgutils.RunTx(ctx, db, func(tx *sqlx.Tx) error {
 		_, err := pgutils.Exec(ctx, tx,
 			`INSERT INTO 
-				bots (uuid, name, token, created_at, updated_at) 
+				bots (uuid, name, token, status, created_at, updated_at) 
 			VALUES 
-				($1, $2, $3, $4, $5)`,
-			botUUID, gofakeit.Name(), gofakeit.UUID(), time.Now(), time.Now(),
+				($1, $2, $3, $4, $5, $6)`,
+			botUUID, gofakeit.Name(), gofakeit.UUID(), "stopped", time.Now(), time.Now(),
 		)
 		if err != nil {
 			return err

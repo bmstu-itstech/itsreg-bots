@@ -84,7 +84,7 @@ func (p *Port) startBot(ctx context.Context, botUUID string) error {
 		return err
 	}
 
-	err = tgBot.Start()
+	err = tgBot.Start(ctx)
 	if err != nil {
 		return err
 	}
@@ -100,8 +100,7 @@ func (p *Port) stopBot(ctx context.Context, botUUID string) error {
 		return fmt.Errorf("bot not found: %s", botUUID)
 	}
 
-	tgBot.Stop()
 	delete(p.bots, botUUID)
 
-	return nil
+	return tgBot.Stop(ctx)
 }

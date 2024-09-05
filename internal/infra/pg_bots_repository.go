@@ -113,10 +113,10 @@ func checkInsertResult(res sql.Result) error {
 func insertBot(ctx context.Context, ex sqlx.ExecerContext, bot *bots.Bot) error {
 	res, err := pgutils.Exec(ctx, ex,
 		`INSERT INTO
-        	bots (uuid, name, token, created_at, updated_at) 
+        	bots (uuid, name, token, status, created_at, updated_at) 
         VALUES
-			($1, $2, $3, $4, $5)`,
-		bot.UUID, bot.Name, bot.Token, bot.CreatedAt.UTC(), bot.UpdatedAt.UTC(),
+			($1, $2, $3, $4, $5, $6)`,
+		bot.UUID, bot.Name, bot.Token, bot.Status.String(), bot.CreatedAt.UTC(), bot.UpdatedAt.UTC(),
 	)
 	if pgutils.IsUniqueViolationError(err) {
 		return bots.BotAlreadyExistsError{UUID: bot.UUID}
@@ -131,7 +131,7 @@ func selectBot(ctx context.Context, q sqlx.QueryerContext, uuid string) (*bots.B
 	var bot botRow
 	err := pgutils.Get(ctx, q, &bot,
 		`SELECT
-			uuid, name, token, created_at, updated_at
+			uuid, name, token, status, created_at, updated_at
 		FROM 
 			bots
 		WHERE
@@ -153,7 +153,10 @@ func selectBot(ctx context.Context, q sqlx.QueryerContext, uuid string) (*bots.B
 		return nil, err
 	}
 
-	return bots.NewBotFromDB(bot.UUID, entries, blocks, bot.Name, bot.Token, bot.CreatedAt.Local(), bot.UpdatedAt.Local())
+	return bots.NewBotFromDB(
+		bot.UUID, entries, blocks, bot.Name, bot.Token,
+		bot.Status, bot.CreatedAt.Local(), bot.UpdatedAt.Local(),
+	)
 }
 
 func updateBot(ctx context.Context, ex sqlx.ExecerContext, bot *bots.Bot) error {
@@ -161,10 +164,10 @@ func updateBot(ctx context.Context, ex sqlx.ExecerContext, bot *bots.Bot) error 
 		`UPDATE 
 			bots 
 		SET
-			name = $2, token = $3, updated_at = $4
+			name = $2, token = $3, status = $4, updated_at = $5
 		WHERE
 			uuid = $1`,
-		bot.UUID, bot.Name, bot.Token, bot.UpdatedAt.UTC(),
+		bot.UUID, bot.Name, bot.Token, bot.Status.String(), bot.UpdatedAt.UTC(),
 	)
 	if err != nil {
 		return err
@@ -412,6 +415,7 @@ type botRow struct {
 	UUID      string    `db:"uuid"`
 	Name      string    `db:"name"`
 	Token     string    `db:"token"`
+	Status    string    `db:"status"`
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 }

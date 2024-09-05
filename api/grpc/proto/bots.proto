@@ -14,6 +14,14 @@ service BotsService {
 
 
 
+enum Status {
+  StatusUnknown = 0;
+
+  Started = 1;
+  Stopped = 2;
+  Failed  = 3;
+}
+
 message CreateBotRequest {
   string botUUID = 1;
   string name    = 2;
@@ -48,7 +56,7 @@ message EntryPoint {
 }
 
 enum BlockType {
-  Unknown        = 0;
+  BlockUnknown   = 0;
   BlockMessage   = 1;
   BlockQuestion  = 2;
   BlockSelection = 3;
@@ -68,6 +76,7 @@ message Bot {
   string botUUID = 1;
   string name    = 2;
   string token   = 3;
+  Status status  = 4;
 
   repeated EntryPoint entries = 5;
   repeated Block      blocks  = 6;
