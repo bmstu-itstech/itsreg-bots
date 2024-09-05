@@ -23,3 +23,6 @@ go.work.sum
 
 # GoLand project files
 .idea/**
+
+# DotEnv file
+.env
