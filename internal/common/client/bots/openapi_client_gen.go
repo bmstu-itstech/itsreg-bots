@@ -99,6 +99,12 @@ type ClientInterface interface {
 
 	// GetAnswers request
 	GetAnswers(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// StartBot request
+	StartBot(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// StopBot request
+	StopBot(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) CreateBotWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -139,6 +145,30 @@ func (c *Client) GetBot(ctx context.Context, uuid string, reqEditors ...RequestE
 
 func (c *Client) GetAnswers(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAnswersRequest(c.Server, uuid)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) StartBot(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartBotRequest(c.Server, uuid)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) StopBot(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStopBotRequest(c.Server, uuid)
 	if err != nil {
 		return nil, err
 	}
@@ -257,6 +287,74 @@ func NewGetAnswersRequest(server string, uuid string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewStartBotRequest generates requests for StartBot
+func NewStartBotRequest(server string, uuid string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "uuid", runtime.ParamLocationPath, uuid)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/bots/%s/start", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewStopBotRequest generates requests for StopBot
+func NewStopBotRequest(server string, uuid string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "uuid", runtime.ParamLocationPath, uuid)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/bots/%s/stop", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -310,6 +408,12 @@ type ClientWithResponsesInterface interface {
 
 	// GetAnswers request
 	GetAnswersWithResponse(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*GetAnswersResponse, error)
+
+	// StartBot request
+	StartBotWithResponse(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*StartBotResponse, error)
+
+	// StopBot request
+	StopBotWithResponse(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*StopBotResponse, error)
 }
 
 type CreateBotResponse struct {
@@ -379,6 +483,50 @@ func (r GetAnswersResponse) StatusCode() int {
 	return 0
 }
 
+type StartBotResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON404      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r StartBotResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StartBotResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type StopBotResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON404      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r StopBotResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StopBotResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // CreateBotWithBodyWithResponse request with arbitrary body returning *CreateBotResponse
 func (c *ClientWithResponses) CreateBotWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateBotResponse, error) {
 	rsp, err := c.CreateBotWithBody(ctx, contentType, body, reqEditors...)
@@ -412,6 +560,24 @@ func (c *ClientWithResponses) GetAnswersWithResponse(ctx context.Context, uuid s
 		return nil, err
 	}
 	return ParseGetAnswersResponse(rsp)
+}
+
+// StartBotWithResponse request returning *StartBotResponse
+func (c *ClientWithResponses) StartBotWithResponse(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*StartBotResponse, error) {
+	rsp, err := c.StartBot(ctx, uuid, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStartBotResponse(rsp)
+}
+
+// StopBotWithResponse request returning *StopBotResponse
+func (c *ClientWithResponses) StopBotWithResponse(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*StopBotResponse, error) {
+	rsp, err := c.StopBot(ctx, uuid, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStopBotResponse(rsp)
 }
 
 // ParseCreateBotResponse parses an HTTP response from a CreateBotWithResponse call
@@ -482,6 +648,58 @@ func ParseGetAnswersResponse(rsp *http.Response) (*GetAnswersResponse, error) {
 	}
 
 	response := &GetAnswersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseStartBotResponse parses an HTTP response from a StartBotWithResponse call
+func ParseStartBotResponse(rsp *http.Response) (*StartBotResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StartBotResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseStopBotResponse parses an HTTP response from a StopBotWithResponse call
+func ParseStopBotResponse(rsp *http.Response) (*StopBotResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StopBotResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

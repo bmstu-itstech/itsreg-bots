@@ -8,7 +8,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/sirupsen/logrus"
+
+	"github.com/bmstu-itstech/itsreg-bots/internal/common/logs"
 )
 
 func RunHTTPServer(createHandler func(router chi.Router) http.Handler) {
@@ -23,11 +24,13 @@ func RunHTTPServerOnAddr(addr string, createHandler func(router chi.Router) http
 	// we are mounting all APIs under /api path
 	rootRouter.Mount("/api", createHandler(apiRouter))
 
-	logrus.Info("Starting HTTP server")
+	logger := logs.DefaultLogger()
+	logger.Info("Starting: HTTP server", "addr", addr)
 
 	err := http.ListenAndServe(addr, rootRouter)
 	if err != nil {
-		logrus.WithError(err).Panic("Unable to start HTTP server")
+		logger.Error("Unable to start HTTP server")
+		panic(err)
 	}
 }
 

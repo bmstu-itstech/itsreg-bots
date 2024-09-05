@@ -78,6 +78,48 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /bots/{uuid}/start:
+    post:
+      operationId: startBot
+      parameters:
+        - in: path
+          name: uuid
+          schema:
+            type: string
+            example: 14ab-d740
+          required: true
+          description: TODO
+      responses:
+        '200':
+          description: TODO
+        '404':
+          description: TODO
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /bots/{uuid}/stop:
+    post:
+      operationId: stopBot
+      parameters:
+        - in: path
+          name: uuid
+          schema:
+            type: string
+            example: 14ab-d740
+          required: true
+          description: TODO
+      responses:
+        '200':
+          description: TODO
+        '404':
+          description: TODO
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   schemas:
 
