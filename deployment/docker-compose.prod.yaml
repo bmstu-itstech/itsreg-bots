@@ -1,0 +1,100 @@
+services:
+  bots-http:
+    container_name: ir-bots-http
+    build:
+      context: ../
+      args:
+        SERVICE: http
+    volumes:
+      - ../.go/pkg:/go/pkg
+      - ../.go-cache:/go-cache
+    environment:
+      GOCACHE: /go-cache
+    ports:
+      - 8400:$PORT
+    env_file:
+      - ../.env
+    depends_on:
+      bots-db:
+        condition: service_healthy
+        restart: true
+    networks:
+      - ir-web-bots
+
+  bots-telegram:
+    container_name: ir-bots-telegram
+    build:
+      context: ../
+      args:
+        SERVICE: telegram
+    volumes:
+      - ../.go/pkg:/go/pkg
+      - ../.go-cache:/go-cache
+    environment:
+      GOCACHE: /go-cache
+    env_file:
+      - ../.env
+    depends_on:
+      bots-db:
+        condition: service_healthy
+        restart: true
+      bots-rabbitmq:
+        condition: service_started
+        restart: true
+    networks:
+      - ir-web-bots
+
+  bots-db:
+    image: postgres:15.3-alpine3.18
+    container_name: ir-bots-postgres
+    command: postgres
+    ports:
+      - 54321:5432
+    env_file:
+      - ../.env
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
+      interval: 5s
+      retries: 5
+      start_period: 10s
+      timeout: 10s
+    networks:
+      ir-web-bots:
+        aliases:
+          - db
+
+  bots-migrate:
+    image: migrate/migrate
+    container_name: ir-bots-migrate
+    networks:
+      - ir-web-bots
+    volumes:
+      - ../migrations:/migrations
+    env_file:
+      - ../.env
+    command: [ "-path", "/migrations", "-database", "$DATABASE_URI", "up" ]
+    depends_on:
+      bots-db:
+        condition: service_healthy
+
+  bots-rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: ir-bots-rabbitmq
+    restart: unless-stopped
+    ports:
+      - 15672:15672
+      - 5672:5672
+    environment:
+      RABBITMQ_DEFAULT_USER: $RABBITMQ_USER
+      RABBITMQ_DEFAULT_PASS: $RABBITMQ_PASSWORD
+    volumes:
+      - ~/.docker/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+      ir-web-bots:
+        aliases:
+          - rabbitmq
+
+networks:
+  ir-web-bots:
+    driver: bridge

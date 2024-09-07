@@ -29,7 +29,7 @@ func NewApplication() (
 	logger := logs.DefaultLogger()
 	metricsClient := metrics.NoOp{}
 
-	url := os.Getenv("DATABASE_URL")
+	url := os.Getenv("DATABASE_URI")
 	db := sqlx.MustConnect("postgres", url)
 
 	botsR := infra.NewPgBotsRepository(db)
