@@ -29,18 +29,18 @@ jobs:
     name: "Deploy bots service"
     needs: "test"
     runs-on: "ubuntu-latest"
-    environment: Deploy
+    environment: production
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script_stop: true
           script: |
-            cd ${{ env.PROJECT_DIR }}
+            cd ${{ vars.PROJECT_DIR }}
             docker compose -f deployment/docker-compose.prod.yaml down
             git stash
             git checkout main
