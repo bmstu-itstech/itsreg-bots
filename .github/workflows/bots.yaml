@@ -25,3 +25,22 @@ jobs:
         with:
           name: Go-results
           path: test-results.json
+  deploy:
+    name: "Deploy bots service"
+    runs-on: "ubuntu-latest"
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script_stop: true
+          script: |
+            cd ${{ secrets.PROJECT_DIR }}
+            docker compose -f deployment/docker-compose.prod.yaml down
+            git stash
+            git checkout main
+            git pull origin main
+            docker compose --env-file=.env -f deployment/docker-compose.prod.yaml up --build -d
