@@ -27,6 +27,7 @@ jobs:
           path: test-results.json
   deploy:
     name: "Deploy bots service"
+    needs: "test"
     runs-on: "ubuntu-latest"
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:

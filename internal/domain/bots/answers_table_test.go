@@ -25,7 +25,8 @@ func TestNewTable(t *testing.T) {
 			bots.MustNewQuestionBlock(2, 0, "Last name", "What is your last name?"),
 		}
 		botUUID := uuid.NewString()
-		bot := bots.MustNewBot(botUUID, entries, blocks, "Test bot", "xxx-yyy")
+		userUUID := uuid.NewString()
+		bot := bots.MustNewBot(botUUID, userUUID, entries, blocks, "Test bot", "xxx-yyy")
 
 		ivan := bots.MustNewParticipant(botUUID, 10)
 		ivan.SwitchTo(1)
