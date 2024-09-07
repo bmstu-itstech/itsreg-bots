@@ -34,12 +34,12 @@ jobs:
       - name: Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script_stop: true
           script: |
-            cd ${{ secrets.PROJECT_DIR }}
+            cd ${{ env.PROJECT_DIR }}
             docker compose -f deployment/docker-compose.prod.yaml down
             git stash
             git checkout main
