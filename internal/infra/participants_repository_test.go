@@ -24,7 +24,7 @@ func TestPgParticipantsRepository(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	url := os.Getenv("DATABASE_URL")
+	url := os.Getenv("DATABASE_URI")
 	db := sqlx.MustConnect("postgres", url)
 	t.Cleanup(func() {
 		err := db.Close()

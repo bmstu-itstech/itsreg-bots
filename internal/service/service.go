@@ -78,8 +78,8 @@ func newApplication(
 	return &app.Application{
 		Commands: app.Commands{
 			CreateBot:    command.NewCreateBotHandler(bots, logger, metricsClient),
-			StartBot:     command.NewStartBotHandler(runPub, logger, metricsClient),
-			StopBot:      command.NewStopBotHandler(runPub, logger, metricsClient),
+			StartBot:     command.NewStartBotHandler(bots, runPub, logger, metricsClient),
+			StopBot:      command.NewStopBotHandler(bots, runPub, logger, metricsClient),
 			UpdateStatus: command.NewUpdateStatusHandler(bots, logger, metricsClient),
 			Entry:        command.NewEntryHandler(bots, participants, msgPub, logger, metricsClient),
 			Process:      command.NewProcessHandler(bots, participants, msgPub, logger, metricsClient),
@@ -87,6 +87,7 @@ func newApplication(
 		Queries: app.Queries{
 			AllAnswers: query.NewGetAnswersTableHandler(bots, participants, logger, metricsClient),
 			GetBot:     query.NewGetBotHandler(bots, logger, metricsClient),
+			GetBots:    query.NewGetBotsHandler(bots, logger, metricsClient),
 		},
 	}
 }

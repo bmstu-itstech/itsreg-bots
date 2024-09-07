@@ -9,20 +9,28 @@ import (
 )
 
 type StartBot struct {
-	BotUUID string
+	UserUUID string
+	BotUUID  string
 }
 
 type StartBotHandler decorator.CommandHandler[StartBot]
 
 type startBotHandler struct {
+	bots   bots.Repository
 	runPub bots.RunnerPublisher
 }
 
 func NewStartBotHandler(
+	bots bots.Repository,
 	runPub bots.RunnerPublisher,
+
 	log *slog.Logger,
 	metricsClient decorator.MetricsClient,
 ) StartBotHandler {
+	if bots == nil {
+		panic("bots repository is nil")
+	}
+
 	if runPub == nil {
 		panic("runner publisher is nil")
 	}
@@ -35,5 +43,14 @@ func NewStartBotHandler(
 }
 
 func (h startBotHandler) Handle(ctx context.Context, cmd StartBot) error {
+	bot, err := h.bots.Bot(ctx, cmd.BotUUID)
+	if err != nil {
+		return err
+	}
+
+	if err = bot.CanSeeBot(cmd.UserUUID); err != nil {
+		return err
+	}
+
 	return h.runPub.PublishStart(ctx, cmd.BotUUID)
 }

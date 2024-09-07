@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/bmstu-itstech/itsreg-bots/internal/common/jwtauth"
 	"net/http"
 	"os"
 	"strings"
@@ -39,6 +40,7 @@ func setMiddlewares(router *chi.Mux) {
 	router.Use(middleware.RealIP)
 	//router.Use(logs.NewStructuredLogger(logrus.StandardLogger()))
 	router.Use(middleware.Recoverer)
+	router.Use(jwtauth.HTTPMiddleware)
 
 	addCorsMiddleware(router)
 

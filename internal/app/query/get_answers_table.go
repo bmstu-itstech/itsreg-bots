@@ -10,7 +10,8 @@ import (
 )
 
 type GetAnswersTable struct {
-	BotUUID string
+	UserUUID string
+	BotUUID  string
 }
 
 type GetAnswersTableHandler decorator.QueryHandler[GetAnswersTable, types.AnswersTable]
@@ -45,6 +46,10 @@ func NewGetAnswersTableHandler(
 func (h answersHandler) Handle(ctx context.Context, query GetAnswersTable) (types.AnswersTable, error) {
 	bot, err := h.bots.Bot(ctx, query.BotUUID)
 	if err != nil {
+		return types.AnswersTable{}, err
+	}
+
+	if err = bot.CanSeeBot(query.UserUUID); err != nil {
 		return types.AnswersTable{}, err
 	}
 

@@ -10,6 +10,8 @@ import (
 )
 
 type CreateBot struct {
+	UserUUID string
+
 	BotUUID string
 	Name    string
 	Token   string
@@ -52,7 +54,7 @@ func (h createBotHandler) Handle(ctx context.Context, cmd CreateBot) error {
 		return err
 	}
 
-	bot, err := bots.NewBot(cmd.BotUUID, entries, blocks, cmd.Name, cmd.Token)
+	bot, err := bots.NewBot(cmd.BotUUID, cmd.UserUUID, entries, blocks, cmd.Name, cmd.Token)
 	if err != nil {
 		return err
 	}

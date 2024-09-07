@@ -22,7 +22,7 @@ func TestPgBotsRepository(t *testing.T) {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	url := os.Getenv("DATABASE_URL")
+	url := os.Getenv("DATABASE_URI")
 	db := sqlx.MustConnect("postgres", url)
 	t.Cleanup(func() {
 		err := db.Close()
@@ -41,7 +41,7 @@ func testBotsRepository(t *testing.T, repos bots.Repository) {
 
 		ctx := context.Background()
 
-		bot := createBot()
+		bot := createBot(gofakeit.UUID())
 
 		err := repos.Save(ctx, bot)
 		require.NoError(t, err)
@@ -57,7 +57,7 @@ func testBotsRepository(t *testing.T, repos bots.Repository) {
 
 		ctx := context.Background()
 
-		bot := createBot()
+		bot := createBot(gofakeit.UUID())
 
 		err := repos.Save(ctx, bot)
 		require.NoError(t, err)
@@ -105,7 +105,7 @@ func testBotsRepository(t *testing.T, repos bots.Repository) {
 
 		ctx := context.Background()
 
-		bot := createBot()
+		bot := createBot(gofakeit.UUID())
 
 		err := repos.Save(ctx, bot)
 		require.NoError(t, err)
@@ -116,11 +116,44 @@ func testBotsRepository(t *testing.T, repos bots.Repository) {
 		_, err = repos.Bot(ctx, bot.UUID)
 		require.ErrorAs(t, err, &bots.BotNotFoundError{})
 	})
+
+	t.Run("should return owner's bots", func(t *testing.T) {
+		t.Parallel()
+
+		ctx := context.Background()
+
+		ownerUUID := gofakeit.UUID()
+
+		bot1 := createBot(ownerUUID)
+		err := repos.Save(context.Background(), bot1)
+		require.NoError(t, err)
+
+		bot2 := createBot(ownerUUID)
+		err = repos.Save(context.Background(), bot2)
+		require.NoError(t, err)
+
+		bs, err := repos.Bots(ctx, ownerUUID)
+		expected := []*bots.Bot{bot1, bot2}
+		requireBotsSlices(t, expected, bs)
+	})
+
+	t.Run("should return empty list if owner has no bots", func(t *testing.T) {
+		t.Parallel()
+
+		ctx := context.Background()
+
+		ownerUUID := gofakeit.UUID()
+
+		bs, err := repos.Bots(ctx, ownerUUID)
+		require.NoError(t, err)
+		require.Empty(t, bs)
+	})
 }
 
-func createBot() *bots.Bot {
+func createBot(ownerUUID string) *bots.Bot {
 	return bots.MustNewBot(
 		gofakeit.UUID(),
+		ownerUUID,
 		[]bots.EntryPoint{
 			bots.MustNewEntryPoint("start", 1),
 		},
@@ -224,6 +257,7 @@ func equalEntriesSlices(a, b []bots.EntryPoint) bool {
 
 func equalBots(a, b bots.Bot) bool {
 	return a.UUID == b.UUID &&
+		a.OwnerUUID == b.OwnerUUID &&
 		a.Name == b.Name &&
 		a.Token == b.Token &&
 		a.CreatedAt.Sub(b.CreatedAt).Abs() < time.Microsecond &&
@@ -235,6 +269,36 @@ func equalBots(a, b bots.Bot) bool {
 func requireBot(t *testing.T, expected bots.Bot, actual bots.Bot) {
 	require.Truef(t,
 		equalBots(expected, actual),
+		"expected %v, got %v", expected, actual,
+	)
+}
+
+func equalBotsSlices(a, b []*bots.Bot) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	a = slices.Clone(a)
+	b = slices.Clone(b)
+
+	botsComparator := func(a, b *bots.Bot) int {
+		return strings.Compare(a.UUID, b.UUID)
+	}
+
+	slices.SortFunc(a, botsComparator)
+	slices.SortFunc(b, botsComparator)
+
+	for i := range a {
+		if !equalBots(*a[i], *b[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func requireBotsSlices(t *testing.T, expected, actual []*bots.Bot) {
+	require.Truef(t,
+		equalBotsSlices(expected, actual),
 		"expected %v, got %v", expected, actual,
 	)
 }

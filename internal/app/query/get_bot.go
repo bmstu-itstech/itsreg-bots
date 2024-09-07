@@ -10,7 +10,8 @@ import (
 )
 
 type GetBot struct {
-	BotUUID string
+	UserUUID string
+	BotUUID  string
 }
 
 type GetBotHandler decorator.QueryHandler[GetBot, types.Bot]
@@ -35,6 +36,10 @@ func NewGetBotHandler(
 func (h getBotHandler) Handle(ctx context.Context, query GetBot) (types.Bot, error) {
 	bot, err := h.bots.Bot(ctx, query.BotUUID)
 	if err != nil {
+		return types.Bot{}, err
+	}
+
+	if err = bot.CanSeeBot(query.UserUUID); err != nil {
 		return types.Bot{}, err
 	}
 

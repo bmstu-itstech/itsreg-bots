@@ -1,6 +1,7 @@
 package bots
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -9,6 +10,8 @@ import (
 
 type Bot struct {
 	UUID string
+
+	OwnerUUID string
 
 	entryPoints map[string]EntryPoint
 	blocks      map[int]Block
@@ -23,6 +26,7 @@ type Bot struct {
 
 func NewBot(
 	uuid string,
+	ownerUUID string,
 	entries []EntryPoint,
 	blocks []Block,
 	name string,
@@ -30,6 +34,10 @@ func NewBot(
 ) (*Bot, error) {
 	if uuid == "" {
 		return nil, commonerrs.NewInvalidInputError("expected not empty uuid")
+	}
+
+	if ownerUUID == "" {
+		return nil, commonerrs.NewInvalidInputError("expected not empty owner uuid")
 	}
 
 	if len(entries) == 0 {
@@ -84,6 +92,7 @@ func NewBot(
 
 	return &Bot{
 		UUID:      uuid,
+		OwnerUUID: ownerUUID,
 		Name:      name,
 		Token:     token,
 		Status:    Stopped,
@@ -97,12 +106,13 @@ func NewBot(
 
 func MustNewBot(
 	uuid string,
+	ownerUUID string,
 	entryPoints []EntryPoint,
 	blocks []Block,
 	name string,
 	token string,
 ) *Bot {
-	b, err := NewBot(uuid, entryPoints, blocks, name, token)
+	b, err := NewBot(uuid, ownerUUID, entryPoints, blocks, name, token)
 	if err != nil {
 		panic(err)
 	}
@@ -111,6 +121,7 @@ func MustNewBot(
 
 func NewBotFromDB(
 	uuid string,
+	ownerUUID string,
 	entries []EntryPoint,
 	blocks []Block,
 	name string,
@@ -121,6 +132,10 @@ func NewBotFromDB(
 ) (*Bot, error) {
 	if uuid == "" {
 		return nil, commonerrs.NewInvalidInputError("expected not empty uuid")
+	}
+
+	if ownerUUID == "" {
+		return nil, commonerrs.NewInvalidInputError("expected not empty owner uuid")
 	}
 
 	if blocks == nil {
@@ -164,6 +179,7 @@ func NewBotFromDB(
 
 	return &Bot{
 		UUID:        uuid,
+		OwnerUUID:   ownerUUID,
 		entryPoints: es,
 		blocks:      bs,
 		Name:        name,
@@ -252,6 +268,15 @@ func (b *Bot) SetBlocks(entries []EntryPoint, blocks []Block) error {
 
 func (b *Bot) SetStatus(status Status) {
 	b.Status = status
+}
+
+var ErrPermissionDenied = errors.New("permission denied")
+
+func (b *Bot) CanSeeBot(userUUID string) error {
+	if b.OwnerUUID != userUUID {
+		return ErrPermissionDenied
+	}
+	return nil
 }
 
 type vertex struct {
