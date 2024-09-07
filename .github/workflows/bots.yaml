@@ -41,7 +41,7 @@ jobs:
           script_stop: true
           script: |
             cd ${{ vars.PROJECT_DIR }}
-            docker compose -f deployment/docker-compose.prod.yaml down
+            docker compose --env-file=.env -f deployment/docker-compose.prod.yaml down
             git stash
             git checkout main
             git pull origin main
