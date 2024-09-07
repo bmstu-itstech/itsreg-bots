@@ -177,7 +177,7 @@ func mapEntryPointsFromAPI(entries []EntryPoint) []types.EntryPoint {
 func mapBlockToAPI(block types.Block) Block {
 	return Block{
 		Type:      BlockType(block.Type),
-		NextState: block.State,
+		NextState: block.NextState,
 		Options:   mapOptionsToAPI(block.Options),
 		State:     block.State,
 		Text:      block.Text,
