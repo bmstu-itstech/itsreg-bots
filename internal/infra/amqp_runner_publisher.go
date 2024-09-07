@@ -3,6 +3,7 @@ package infra
 import (
 	"context"
 	"encoding/json"
+	"os"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill-amqp/v2/pkg/amqp"
@@ -11,8 +12,7 @@ import (
 )
 
 const (
-	amqpRunnerURI = "amqp://guest:guest@localhost:5672/"
-	runnerTopic   = "runner"
+	runnerTopic = "runner"
 )
 
 type amqpRunnerPublisher struct {
@@ -20,7 +20,8 @@ type amqpRunnerPublisher struct {
 }
 
 func NewAmqpRunnerPublisher() (bots.RunnerPublisher, <-chan *message.Message, func() error) {
-	amqpConfig := amqp.NewDurableQueueConfig(amqpRunnerURI)
+	uri := os.Getenv("AMQP_URI")
+	amqpConfig := amqp.NewDurableQueueConfig(uri)
 
 	wmLogger := watermill.NewStdLogger(false, false)
 
