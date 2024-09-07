@@ -13,6 +13,7 @@ import (
 	"github.com/bmstu-itstech/itsreg-bots/internal/app/query"
 	"github.com/bmstu-itstech/itsreg-bots/internal/app/types"
 	"github.com/bmstu-itstech/itsreg-bots/internal/common/commonerrs"
+	"github.com/bmstu-itstech/itsreg-bots/internal/common/jwtauth"
 	"github.com/bmstu-itstech/itsreg-bots/internal/domain/bots"
 )
 
@@ -27,23 +28,34 @@ func NewHTTPServer(app *app.Application) *Server {
 func (s Server) CreateBot(w http.ResponseWriter, r *http.Request) {
 	postBots := PostBots{}
 	if err := render.Decode(r, &postBots); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpError(w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	err := s.app.Commands.CreateBot.Handle(r.Context(), command.CreateBot{
-		BotUUID: postBots.BotUUID,
-		Name:    postBots.Name,
-		Token:   postBots.Token,
-		Entries: mapEntryPointsFromAPI(postBots.Entries),
-		Blocks:  mapBlocksFromAPI(postBots.Blocks),
+	userUUID, err := jwtauth.UserUUIDFromContext(r.Context())
+	if err != nil {
+		httpError(w, r, err, http.StatusUnauthorized)
+		return
+	}
+
+	err = s.app.Commands.CreateBot.Handle(r.Context(), command.CreateBot{
+		BotUUID:  postBots.BotUUID,
+		UserUUID: userUUID,
+		Name:     postBots.Name,
+		Token:    postBots.Token,
+		Entries:  mapEntryPointsFromAPI(postBots.Entries),
+		Blocks:   mapBlocksFromAPI(postBots.Blocks),
 	})
 	if errors.As(err, &commonerrs.InvalidInputError{}) {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		httpError(w, r, err, http.StatusBadRequest)
+		return
+	}
+	if errors.Is(err, bots.ErrPermissionDenied) {
+		httpError(w, r, err, http.StatusForbidden)
 		return
 	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httpError(w, r, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -51,41 +63,95 @@ func (s Server) CreateBot(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+func (s Server) GetBots(w http.ResponseWriter, r *http.Request) {
+	userUUID, err := jwtauth.UserUUIDFromContext(r.Context())
+	if err != nil {
+		httpError(w, r, err, http.StatusUnauthorized)
+		return
+	}
+
+	bs, err := s.app.Queries.GetBots.Handle(r.Context(), query.GetBots{
+		UserUUID: userUUID,
+	})
+	if err != nil {
+		httpError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	render.JSON(w, r, mapBotsToAPI(bs))
+}
+
 func (s Server) StartBot(w http.ResponseWriter, r *http.Request, uuid string) {
-	err := s.app.Commands.StartBot.Handle(r.Context(), command.StartBot{
-		BotUUID: uuid,
+	userUUID, err := jwtauth.UserUUIDFromContext(r.Context())
+	if err != nil {
+		httpError(w, r, err, http.StatusUnauthorized)
+		return
+	}
+
+	err = s.app.Commands.StartBot.Handle(r.Context(), command.StartBot{
+		UserUUID: userUUID,
+		BotUUID:  uuid,
 	})
 	if errors.As(err, &bots.BotNotFoundError{}) {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		httpError(w, r, err, http.StatusNotFound)
 		return
-	} else if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if errors.Is(err, bots.ErrPermissionDenied) {
+		httpError(w, r, err, http.StatusForbidden)
+		return
+	}
+	if err != nil {
+		httpError(w, r, err, http.StatusInternalServerError)
 		return
 	}
 }
 
 func (s Server) StopBot(w http.ResponseWriter, r *http.Request, uuid string) {
-	err := s.app.Commands.StopBot.Handle(r.Context(), command.StopBot{
-		BotUUID: uuid,
+	userUUID, err := jwtauth.UserUUIDFromContext(r.Context())
+	if err != nil {
+		httpError(w, r, err, http.StatusUnauthorized)
+		return
+	}
+
+	err = s.app.Commands.StopBot.Handle(r.Context(), command.StopBot{
+		UserUUID: userUUID,
+		BotUUID:  uuid,
 	})
 	if errors.As(err, &bots.BotNotFoundError{}) {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		httpError(w, r, err, http.StatusNotFound)
 		return
-	} else if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if errors.Is(err, bots.ErrPermissionDenied) {
+		httpError(w, r, err, http.StatusForbidden)
+		return
+	}
+	if err != nil {
+		httpError(w, r, err, http.StatusInternalServerError)
 		return
 	}
 }
 
 func (s Server) GetBot(w http.ResponseWriter, r *http.Request, uuid string) {
+	userUUID, err := jwtauth.UserUUIDFromContext(r.Context())
+	if err != nil {
+		httpError(w, r, err, http.StatusUnauthorized)
+		return
+	}
+
 	bot, err := s.app.Queries.GetBot.Handle(r.Context(), query.GetBot{
-		BotUUID: uuid,
+		UserUUID: userUUID,
+		BotUUID:  uuid,
 	})
 	if errors.As(err, &bots.BotNotFoundError{}) {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		httpError(w, r, err, http.StatusNotFound)
 		return
-	} else if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if errors.Is(err, bots.ErrPermissionDenied) {
+		httpError(w, r, err, http.StatusForbidden)
+		return
+	}
+	if err != nil {
+		httpError(w, r, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -93,22 +159,39 @@ func (s Server) GetBot(w http.ResponseWriter, r *http.Request, uuid string) {
 }
 
 func (s Server) GetAnswers(w http.ResponseWriter, r *http.Request, uuid string) {
+	userUUID, err := jwtauth.UserUUIDFromContext(r.Context())
+	if err != nil {
+		httpError(w, r, err, http.StatusUnauthorized)
+		return
+	}
+
 	answers, err := s.app.Queries.AllAnswers.Handle(r.Context(), query.GetAnswersTable{
-		BotUUID: uuid,
+		UserUUID: userUUID,
+		BotUUID:  uuid,
 	})
 	if errors.As(err, &bots.BotNotFoundError{}) {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		httpError(w, r, err, http.StatusNotFound)
 		return
-	} else if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if errors.Is(err, bots.ErrPermissionDenied) {
+		httpError(w, r, err, http.StatusForbidden)
+		return
+	}
+	if err != nil {
+		httpError(w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	err = renderCSVAnswers(w, answers)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		httpError(w, r, err, http.StatusInternalServerError)
 		return
 	}
+}
+
+func httpError(w http.ResponseWriter, r *http.Request, err error, code int) {
+	w.WriteHeader(code)
+	render.JSON(w, r, Error{Message: err.Error()})
 }
 
 func mapOptionToAPI(option types.Option) Option {
@@ -223,6 +306,14 @@ func mapBotToAPI(bot types.Bot) Bot {
 		Token:     bot.Token,
 		UpdatedAt: bot.UpdatedAt,
 	}
+}
+
+func mapBotsToAPI(bs []types.Bot) []Bot {
+	res := make([]Bot, len(bs))
+	for i, b := range bs {
+		res[i] = mapBotToAPI(b)
+	}
+	return res
 }
 
 func renderCSVAnswers(w http.ResponseWriter, answers types.AnswersTable) error {

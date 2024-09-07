@@ -89,6 +89,9 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// GetBots request
+	GetBots(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CreateBot request with any body
 	CreateBotWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -105,6 +108,18 @@ type ClientInterface interface {
 
 	// StopBot request
 	StopBot(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) GetBots(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetBotsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) CreateBotWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -177,6 +192,33 @@ func (c *Client) StopBot(ctx context.Context, uuid string, reqEditors ...Request
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewGetBotsRequest generates requests for GetBots
+func NewGetBotsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/bots")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }
 
 // NewCreateBotRequest calls the generic CreateBot builder with application/json body
@@ -398,6 +440,9 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// GetBots request
+	GetBotsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetBotsResponse, error)
+
 	// CreateBot request with any body
 	CreateBotWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateBotResponse, error)
 
@@ -416,10 +461,34 @@ type ClientWithResponsesInterface interface {
 	StopBotWithResponse(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*StopBotResponse, error)
 }
 
+type GetBotsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GetBots
+	JSON401      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetBotsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetBotsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type CreateBotResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON400      *Error
+	JSON401      *Error
 }
 
 // Status returns HTTPResponse.Status
@@ -442,6 +511,8 @@ type GetBotResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *Bot
+	JSON401      *Error
+	JSON403      *Error
 	JSON404      *Error
 }
 
@@ -464,6 +535,8 @@ func (r GetBotResponse) StatusCode() int {
 type GetAnswersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
+	JSON401      *Error
+	JSON403      *Error
 	JSON404      *Error
 }
 
@@ -486,6 +559,8 @@ func (r GetAnswersResponse) StatusCode() int {
 type StartBotResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
+	JSON401      *Error
+	JSON403      *Error
 	JSON404      *Error
 }
 
@@ -508,6 +583,8 @@ func (r StartBotResponse) StatusCode() int {
 type StopBotResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
+	JSON401      *Error
+	JSON403      *Error
 	JSON404      *Error
 }
 
@@ -525,6 +602,15 @@ func (r StopBotResponse) StatusCode() int {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
+}
+
+// GetBotsWithResponse request returning *GetBotsResponse
+func (c *ClientWithResponses) GetBotsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetBotsResponse, error) {
+	rsp, err := c.GetBots(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetBotsResponse(rsp)
 }
 
 // CreateBotWithBodyWithResponse request with arbitrary body returning *CreateBotResponse
@@ -580,6 +666,39 @@ func (c *ClientWithResponses) StopBotWithResponse(ctx context.Context, uuid stri
 	return ParseStopBotResponse(rsp)
 }
 
+// ParseGetBotsResponse parses an HTTP response from a GetBotsWithResponse call
+func ParseGetBotsResponse(rsp *http.Response) (*GetBotsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetBotsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GetBots
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseCreateBotResponse parses an HTTP response from a CreateBotWithResponse call
 func ParseCreateBotResponse(rsp *http.Response) (*CreateBotResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -600,6 +719,13 @@ func ParseCreateBotResponse(rsp *http.Response) (*CreateBotResponse, error) {
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	}
 
@@ -627,6 +753,20 @@ func ParseGetBotResponse(rsp *http.Response) (*GetBotResponse, error) {
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -653,6 +793,20 @@ func ParseGetAnswersResponse(rsp *http.Response) (*GetAnswersResponse, error) {
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -679,6 +833,20 @@ func ParseStartBotResponse(rsp *http.Response) (*StartBotResponse, error) {
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -705,6 +873,20 @@ func ParseStopBotResponse(rsp *http.Response) (*StopBotResponse, error) {
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {

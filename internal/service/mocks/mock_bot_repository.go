@@ -41,6 +41,20 @@ func (r *mockBotRepository) Bot(_ context.Context, uuid string) (*bots.Bot, erro
 	return &b, nil
 }
 
+func (r *mockBotRepository) Bots(_ context.Context, userUUID string) ([]*bots.Bot, error) {
+	r.RLock()
+	defer r.RUnlock()
+
+	res := make([]*bots.Bot, 0)
+	for _, b := range r.m {
+		if b.OwnerUUID == userUUID {
+			res = append(res, &b)
+		}
+	}
+
+	return res, nil
+}
+
 func (r *mockBotRepository) Update(
 	ctx context.Context,
 	uuid string,

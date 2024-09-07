@@ -24,6 +24,7 @@ func (e BotAlreadyExistsError) Error() string {
 type Repository interface {
 	Save(ctx context.Context, bot *Bot) error
 	Bot(ctx context.Context, uuid string) (*Bot, error)
+	Bots(ctx context.Context, userUUID string) ([]*Bot, error)
 	Update(
 		ctx context.Context,
 		uuid string,

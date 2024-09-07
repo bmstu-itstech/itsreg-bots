@@ -53,6 +53,10 @@ func (r *pgBotsRepository) Bot(ctx context.Context, uuid string) (*bots.Bot, err
 	return selectBot(ctx, r.db, uuid)
 }
 
+func (r *pgBotsRepository) Bots(ctx context.Context, userUUID string) ([]*bots.Bot, error) {
+	return selectUserBots(ctx, r.db, userUUID)
+}
+
 func (r *pgBotsRepository) Update(
 	ctx context.Context,
 	uuid string,
@@ -113,10 +117,11 @@ func checkInsertResult(res sql.Result) error {
 func insertBot(ctx context.Context, ex sqlx.ExecerContext, bot *bots.Bot) error {
 	res, err := pgutils.Exec(ctx, ex,
 		`INSERT INTO
-        	bots (uuid, name, token, status, created_at, updated_at) 
+        	bots (uuid, owner_uuid, name, token, status, created_at, updated_at) 
         VALUES
-			($1, $2, $3, $4, $5, $6)`,
-		bot.UUID, bot.Name, bot.Token, bot.Status.String(), bot.CreatedAt.UTC(), bot.UpdatedAt.UTC(),
+			($1, $2, $3, $4, $5, $6, $7)`,
+		bot.UUID, bot.OwnerUUID, bot.Name, bot.Token, bot.Status.String(),
+		bot.CreatedAt.UTC(), bot.UpdatedAt.UTC(),
 	)
 	if pgutils.IsUniqueViolationError(err) {
 		return bots.BotAlreadyExistsError{UUID: bot.UUID}
@@ -128,10 +133,10 @@ func insertBot(ctx context.Context, ex sqlx.ExecerContext, bot *bots.Bot) error 
 }
 
 func selectBot(ctx context.Context, q sqlx.QueryerContext, uuid string) (*bots.Bot, error) {
-	var bot botRow
-	err := pgutils.Get(ctx, q, &bot,
+	var row botRow
+	err := pgutils.Get(ctx, q, &row,
 		`SELECT
-			uuid, name, token, status, created_at, updated_at
+			uuid, owner_uuid, name, token, status, created_at, updated_at
 		FROM 
 			bots
 		WHERE
@@ -143,20 +148,60 @@ func selectBot(ctx context.Context, q sqlx.QueryerContext, uuid string) (*bots.B
 		return nil, err
 	}
 
-	blocks, err := selectBlocks(ctx, q, uuid)
+	blocks, err := selectBlocks(ctx, q, row.UUID)
 	if err != nil {
 		return nil, err
 	}
 
-	entries, err := selectEntryPoints(ctx, q, uuid)
+	entries, err := selectEntryPoints(ctx, q, row.UUID)
 	if err != nil {
 		return nil, err
 	}
 
 	return bots.NewBotFromDB(
-		bot.UUID, entries, blocks, bot.Name, bot.Token,
-		bot.Status, bot.CreatedAt.Local(), bot.UpdatedAt.Local(),
+		row.UUID, row.OwnerUUID, entries, blocks, row.Name, row.Token,
+		row.Status, row.CreatedAt.Local(), row.UpdatedAt.Local(),
 	)
+}
+
+func selectUserBots(ctx context.Context, q sqlx.QueryerContext, userUUID string) ([]*bots.Bot, error) {
+	var rows []botRow
+	err := pgutils.Select(ctx, q, &rows,
+		`SELECT
+			uuid, owner_uuid, name, token, status, created_at, updated_at
+		FROM 
+			bots
+		WHERE
+			owner_uuid = $1`, userUUID,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*bots.Bot, 0, len(rows))
+	for _, row := range rows {
+		blocks, err := selectBlocks(ctx, q, row.UUID)
+		if err != nil {
+			return nil, err
+		}
+
+		entries, err := selectEntryPoints(ctx, q, row.UUID)
+		if err != nil {
+			return nil, err
+		}
+
+		bot, err := bots.NewBotFromDB(
+			row.UUID, row.OwnerUUID, entries, blocks, row.Name, row.Token,
+			row.Status, row.CreatedAt.Local(), row.UpdatedAt.Local(),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, bot)
+	}
+
+	return res, nil
 }
 
 func updateBot(ctx context.Context, ex sqlx.ExecerContext, bot *bots.Bot) error {
@@ -413,6 +458,7 @@ type blockRow struct {
 
 type botRow struct {
 	UUID      string    `db:"uuid"`
+	OwnerUUID string    `db:"owner_uuid"`
 	Name      string    `db:"name"`
 	Token     string    `db:"token"`
 	Status    string    `db:"status"`

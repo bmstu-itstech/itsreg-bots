@@ -162,6 +162,14 @@ func MapBotFromDomain(bot *bots.Bot) Bot {
 	}
 }
 
+func MapBotsFromDomain(bs []*bots.Bot) []Bot {
+	res := make([]Bot, len(bs))
+	for i, b := range bs {
+		res[i] = MapBotFromDomain(b)
+	}
+	return res
+}
+
 func MapAnswersTableFromDomain(table *bots.AnswersTable) AnswersTable {
 	return AnswersTable{
 		THead: table.Head,

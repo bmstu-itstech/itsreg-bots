@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+const (
+	BearerAuthScopes = "bearerAuth.Scopes"
+)
+
 // Defines values for BlockType.
 const (
 	Message   BlockType = "message"
@@ -59,6 +63,9 @@ type EntryPoint struct {
 type Error struct {
 	Message string `json:"message"`
 }
+
+// GetBots defines model for GetBots.
+type GetBots = []Bot
 
 // Option defines model for Option.
 type Option struct {

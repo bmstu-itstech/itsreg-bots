@@ -4,6 +4,7 @@
 package httpport
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -13,6 +14,9 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+
+	// (GET /bots)
+	GetBots(w http.ResponseWriter, r *http.Request)
 
 	// (POST /bots)
 	CreateBot(w http.ResponseWriter, r *http.Request)
@@ -39,9 +43,28 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
+// GetBots operation middleware
+func (siw *ServerInterfaceWrapper) GetBots(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetBots(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // CreateBot operation middleware
 func (siw *ServerInterfaceWrapper) CreateBot(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateBot(w, r)
@@ -69,6 +92,8 @@ func (siw *ServerInterfaceWrapper) GetBot(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetBot(w, r, uuid)
 	})
@@ -94,6 +119,8 @@ func (siw *ServerInterfaceWrapper) GetAnswers(w http.ResponseWriter, r *http.Req
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "uuid", Err: err})
 		return
 	}
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAnswers(w, r, uuid)
@@ -121,6 +148,8 @@ func (siw *ServerInterfaceWrapper) StartBot(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.StartBot(w, r, uuid)
 	})
@@ -146,6 +175,8 @@ func (siw *ServerInterfaceWrapper) StopBot(w http.ResponseWriter, r *http.Reques
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "uuid", Err: err})
 		return
 	}
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.StopBot(w, r, uuid)
@@ -271,6 +302,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/bots", wrapper.GetBots)
+	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/bots", wrapper.CreateBot)
 	})
