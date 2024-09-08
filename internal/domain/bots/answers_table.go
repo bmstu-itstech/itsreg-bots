@@ -1,6 +1,9 @@
 package bots
 
-import "strconv"
+import (
+	"slices"
+	"strconv"
+)
 
 const (
 	userIDColumnName = "UserID"
@@ -24,6 +27,9 @@ type mapStateToIndex map[int]int
 
 func thead(bot *Bot) ([]string, mapStateToIndex) {
 	blocks := bot.Blocks()
+	slices.SortFunc(blocks, func(a, b Block) int {
+		return a.State - b.State
+	})
 
 	head := make([]string, 0, len(blocks)+1)
 	m := make(mapStateToIndex)

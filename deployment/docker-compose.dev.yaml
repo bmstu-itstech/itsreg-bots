@@ -18,6 +18,9 @@ services:
       bots-db:
         condition: service_healthy
         restart: true
+      bots-rabbitmq:
+        condition: service_started
+        restart: true
     networks:
       - ir-web-bots
 
