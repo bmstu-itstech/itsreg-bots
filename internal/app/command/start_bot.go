@@ -36,7 +36,7 @@ func NewStartBotHandler(
 	}
 
 	return decorator.ApplyCommandDecorators[StartBot](
-		&startBotHandler{runPub: runPub},
+		&startBotHandler{bots: bots, runPub: runPub},
 		log,
 		metricsClient,
 	)
