@@ -39,8 +39,10 @@ func (h getBotHandler) Handle(ctx context.Context, query GetBot) (types.Bot, err
 		return types.Bot{}, err
 	}
 
-	if err = bot.CanSeeBot(query.UserUUID); err != nil {
-		return types.Bot{}, err
+	if query.UserUUID != "" {
+		if err = bot.CanSeeBot(query.UserUUID); err != nil {
+			return types.Bot{}, err
+		}
 	}
 
 	return types.MapBotFromDomain(bot), nil
