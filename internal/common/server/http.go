@@ -1,7 +1,6 @@
 package server
 
 import (
-	"github.com/bmstu-itstech/itsreg-bots/internal/common/jwtauth"
 	"net/http"
 	"os"
 	"strings"
@@ -10,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
+	"github.com/bmstu-itstech/itsreg-bots/internal/common/jwtauth"
 	"github.com/bmstu-itstech/itsreg-bots/internal/common/logs"
 )
 

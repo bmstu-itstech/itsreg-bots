@@ -2,11 +2,11 @@ package jwtauth
 
 import (
 	"errors"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/golang-jwt/jwt/v5/request"
 	"net/http"
 
 	"github.com/go-chi/render"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/golang-jwt/jwt/v5/request"
 )
 
 func HTTPMiddleware(next http.Handler) http.Handler {
@@ -14,7 +14,10 @@ func HTTPMiddleware(next http.Handler) http.Handler {
 		var claims accessTokenClaims
 		token, err := request.ParseFromRequest(
 			r,
-			request.AuthorizationHeaderExtractor,
+			request.MultiExtractor{
+				request.AuthorizationHeaderExtractor,
+				request.ArgumentExtractor{"jwtToken"},
+			},
 			func(token *jwt.Token) (i interface{}, e error) {
 				return []byte(secret), nil
 			},
