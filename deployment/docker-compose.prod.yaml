@@ -11,16 +11,14 @@ services:
     environment:
       GOCACHE: /go-cache
     ports:
-      - 8400:$PORT
+      - 8400:${PORT:-8400}
     env_file:
       - ../.env
     depends_on:
       bots-db:
         condition: service_healthy
-        restart: true
       bots-rabbitmq:
         condition: service_started
-        restart: true
     networks:
       - ir-web-bots
 
@@ -40,10 +38,8 @@ services:
     depends_on:
       bots-db:
         condition: service_healthy
-        restart: true
       bots-rabbitmq:
         condition: service_started
-        restart: true
     networks:
       - ir-web-bots
 
@@ -52,9 +48,11 @@ services:
     container_name: ir-bots-postgres
     command: postgres
     ports:
-      - 54321:5432
+      - 54001:5432
     env_file:
       - ../.env
+    volumes:
+      - ~/docker/itsreg/postgresql:/var/lib/postgresql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
       interval: 5s
