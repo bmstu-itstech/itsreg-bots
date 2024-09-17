@@ -9,8 +9,8 @@ import (
 )
 
 type StopBot struct {
-	UserUUID string
-	BotUUID  string
+	AuthorUUID string
+	BotUUID    string
 }
 
 type StopBotHandler decorator.CommandHandler[StopBot]
@@ -48,7 +48,7 @@ func (h stopBotHandler) Handle(ctx context.Context, cmd StopBot) error {
 		return err
 	}
 
-	if err = bot.CanSeeBot(cmd.UserUUID); err != nil {
+	if err = bot.CanSeeBot(cmd.AuthorUUID); err != nil {
 		return err
 	}
 

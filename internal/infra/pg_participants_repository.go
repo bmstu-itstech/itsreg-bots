@@ -85,7 +85,7 @@ func selectParticipants(
 		if err != nil {
 			return nil, err
 		}
-		prt, err := bots.NewParticipantFromDB(row.BotUUID, row.UserID, row.State, answers)
+		prt, err := bots.UnmarshallParticipantFromDB(row.BotUUID, row.UserID, row.State, answers)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +117,7 @@ func selectParticipant(
 		return nil, err
 	}
 
-	return bots.NewParticipantFromDB(row.BotUUID, row.UserID, row.State, answers)
+	return bots.UnmarshallParticipantFromDB(row.BotUUID, row.UserID, row.State, answers)
 }
 
 func upsertParticipant(ctx context.Context, ex sqlx.ExecerContext, prt *bots.Participant) error {

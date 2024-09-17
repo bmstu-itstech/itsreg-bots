@@ -25,9 +25,16 @@ type EntryPoint struct {
 	State int
 }
 
+type Mailing struct {
+	Name          string
+	EntryKey      string
+	RequiredState int
+}
+
 type Bot struct {
 	UUID      string
 	Entries   []EntryPoint
+	Mailings  []Mailing
 	Blocks    []Block
 	Name      string
 	Token     string
@@ -103,6 +110,42 @@ func MapEntriesToDomain(entries []EntryPoint) ([]bots.EntryPoint, error) {
 	return res, nil
 }
 
+func MapMailingFromDomain(mailing bots.Mailing) Mailing {
+	return Mailing{
+		Name:          mailing.Name,
+		EntryKey:      mailing.EntryKey,
+		RequiredState: mailing.RequireState,
+	}
+}
+
+func MapMailingsFromDomain(mailings []bots.Mailing) []Mailing {
+	res := make([]Mailing, len(mailings))
+	for i, mailing := range mailings {
+		res[i] = MapMailingFromDomain(mailing)
+	}
+	return res
+}
+
+func MapMailingToDomain(mailing Mailing) (bots.Mailing, error) {
+	return bots.NewMailing(
+		mailing.Name,
+		mailing.EntryKey,
+		mailing.RequiredState,
+	)
+}
+
+func MapMailingsToDomain(mailings []Mailing) ([]bots.Mailing, error) {
+	res := make([]bots.Mailing, len(mailings))
+	for i, mailing := range mailings {
+		m, err := MapMailingToDomain(mailing)
+		if err != nil {
+			return nil, err
+		}
+		res[i] = m
+	}
+	return res, nil
+}
+
 func MapBlockFromDomain(block bots.Block) Block {
 	return Block{
 		Type:      block.Type.String(),
@@ -154,6 +197,7 @@ func MapBotFromDomain(bot *bots.Bot) Bot {
 		UUID:      bot.UUID,
 		Entries:   MapEntriesFromDomain(bot.Entries()),
 		Blocks:    MapBlocksFromDomain(bot.Blocks()),
+		Mailings:  MapMailingsFromDomain(bot.Mailings()),
 		Name:      bot.Name,
 		Token:     bot.Token,
 		Status:    bot.Status.String(),

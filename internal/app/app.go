@@ -17,6 +17,7 @@ type Commands struct {
 	UpdateStatus command.UpdateStatusHandler
 	Entry        command.EntryHandler
 	Process      command.ProcessHandler
+	StartMailing command.StartMailingHandler
 }
 
 type Queries struct {

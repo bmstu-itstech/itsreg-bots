@@ -13,3 +13,7 @@ func (e InvalidInputError) Error() string {
 func NewInvalidInputError(message string) error {
 	return InvalidInputError{Message: message}
 }
+
+func NewInvalidInputErrorf(format string, args ...interface{}) error {
+	return InvalidInputError{Message: fmt.Sprintf(format, args...)}
+}

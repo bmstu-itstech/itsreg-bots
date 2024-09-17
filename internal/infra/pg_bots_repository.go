@@ -45,6 +45,12 @@ func (r *pgBotsRepository) Save(ctx context.Context, bot *bots.Bot) error {
 			}
 		}
 
+		for _, mailing := range bot.Mailings() {
+			if err := insertMailing(ctx, tx, bot.UUID, mailing); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	})
 }
@@ -91,6 +97,10 @@ func (r *pgBotsRepository) Update(
 			return err
 		}
 
+		if err = updateMailings(ctx, r.db, uuid, bot.Mailings()); err != nil {
+			return err
+		}
+
 		return nil
 	})
 }
@@ -118,8 +128,7 @@ func insertBot(ctx context.Context, ex sqlx.ExecerContext, bot *bots.Bot) error 
 	res, err := pgutils.Exec(ctx, ex,
 		`INSERT INTO
         	bots (uuid, owner_uuid, name, token, status, created_at, updated_at) 
-        VALUES
-			($1, $2, $3, $4, $5, $6, $7)`,
+        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		bot.UUID, bot.OwnerUUID, bot.Name, bot.Token, bot.Status.String(),
 		bot.CreatedAt.UTC(), bot.UpdatedAt.UTC(),
 	)
@@ -135,12 +144,9 @@ func insertBot(ctx context.Context, ex sqlx.ExecerContext, bot *bots.Bot) error 
 func selectBot(ctx context.Context, q sqlx.QueryerContext, uuid string) (*bots.Bot, error) {
 	var row botRow
 	err := pgutils.Get(ctx, q, &row,
-		`SELECT
-			uuid, owner_uuid, name, token, status, created_at, updated_at
-		FROM 
-			bots
-		WHERE
-			uuid = $1`, uuid,
+		`SELECT uuid, owner_uuid, name, token, status, created_at, updated_at
+		 FROM   bots
+		 WHERE  uuid = $1`, uuid,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, bots.BotNotFoundError{UUID: uuid}
@@ -153,13 +159,18 @@ func selectBot(ctx context.Context, q sqlx.QueryerContext, uuid string) (*bots.B
 		return nil, err
 	}
 
+	mailings, err := selectMailings(ctx, q, row.UUID)
+	if err != nil {
+		return nil, err
+	}
+
 	entries, err := selectEntryPoints(ctx, q, row.UUID)
 	if err != nil {
 		return nil, err
 	}
 
-	return bots.NewBotFromDB(
-		row.UUID, row.OwnerUUID, entries, blocks, row.Name, row.Token,
+	return bots.UnmarshallBotFromDB(
+		row.UUID, row.OwnerUUID, entries, mailings, blocks, row.Name, row.Token,
 		row.Status, row.CreatedAt.Local(), row.UpdatedAt.Local(),
 	)
 }
@@ -167,12 +178,9 @@ func selectBot(ctx context.Context, q sqlx.QueryerContext, uuid string) (*bots.B
 func selectUserBots(ctx context.Context, q sqlx.QueryerContext, userUUID string) ([]*bots.Bot, error) {
 	var rows []botRow
 	err := pgutils.Select(ctx, q, &rows,
-		`SELECT
-			uuid, owner_uuid, name, token, status, created_at, updated_at
-		FROM 
-			bots
-		WHERE
-			owner_uuid = $1`, userUUID,
+		`SELECT uuid, owner_uuid, name, token, status, created_at, updated_at
+		 FROM   bots
+		 WHERE  owner_uuid = $1`, userUUID,
 	)
 	if err != nil {
 		return nil, err
@@ -190,8 +198,13 @@ func selectUserBots(ctx context.Context, q sqlx.QueryerContext, userUUID string)
 			return nil, err
 		}
 
-		bot, err := bots.NewBotFromDB(
-			row.UUID, row.OwnerUUID, entries, blocks, row.Name, row.Token,
+		mailings, err := selectMailings(ctx, q, row.UUID)
+		if err != nil {
+			return nil, err
+		}
+
+		bot, err := bots.UnmarshallBotFromDB(
+			row.UUID, row.OwnerUUID, entries, mailings, blocks, row.Name, row.Token,
 			row.Status, row.CreatedAt.Local(), row.UpdatedAt.Local(),
 		)
 		if err != nil {
@@ -206,12 +219,12 @@ func selectUserBots(ctx context.Context, q sqlx.QueryerContext, userUUID string)
 
 func updateBot(ctx context.Context, ex sqlx.ExecerContext, bot *bots.Bot) error {
 	res, err := pgutils.Exec(ctx, ex,
-		`UPDATE 
-			bots 
-		SET
-			name = $2, token = $3, status = $4, updated_at = $5
-		WHERE
-			uuid = $1`,
+		`UPDATE bots 
+		 SET    name = $2,
+                token = $3,
+                status = $4,
+                updated_at = $5
+		 WHERE  uuid = $1`,
 		bot.UUID, bot.Name, bot.Token, bot.Status.String(), bot.UpdatedAt.UTC(),
 	)
 	if err != nil {
@@ -234,8 +247,7 @@ func insertEntryPoint(ctx context.Context, ex sqlx.ExecerContext, botUUID string
 	res, err := pgutils.Exec(ctx, ex,
 		`INSERT INTO
 			entry_points (bot_uuid, key, state) 
-        VALUES 
-			($1, $2, $3)`,
+        VALUES ($1, $2, $3)`,
 		botUUID, entry.Key, entry.State,
 	)
 	if err != nil {
@@ -269,14 +281,50 @@ func deleteEntryPoints(ctx context.Context, ex sqlx.ExecerContext, botUUID strin
 	return nil
 }
 
+func insertMailing(ctx context.Context, ex sqlx.ExecerContext, botUUID string, mailing bots.Mailing) error {
+	res, err := pgutils.Exec(ctx, ex,
+		`INSERT INTO mailings
+			(bot_uuid, name, entry_key, required_state) 
+		 VALUES ($1, $2, $3, $4)`,
+		botUUID, mailing.Name, mailing.EntryKey, mailing.RequireState,
+	)
+	if err != nil {
+		return err
+	}
+
+	return checkInsertResult(res)
+}
+
+func deleteMailings(ctx context.Context, ex sqlx.ExecerContext, botUUID string) error {
+	_, err := pgutils.Exec(ctx, ex, `DELETE FROM mailings WHERE bot_uuid = $1`, botUUID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func updateMailings(ctx context.Context, ex sqlx.ExecerContext, botUUID string, mailings []bots.Mailing) error {
+	if err := deleteMailings(ctx, ex, botUUID); err != nil {
+		return err
+	}
+
+	for _, mailing := range mailings {
+		if err := insertMailing(ctx, ex, botUUID, mailing); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func insertOption(
 	ctx context.Context, ex sqlx.ExecerContext, botUUID string, blockState int, option bots.Option,
 ) error {
 	res, err := pgutils.Exec(ctx, ex,
-		`INSERT INTO
+		`INSERT INTO 
 			options (bot_uuid, state, next, text)
-		VALUES 
-			($1, $2, $3, $4)`,
+		 VALUES ($1, $2, $3, $4)`,
 		botUUID, blockState, option.Next, option.Text,
 	)
 	if err != nil {
@@ -314,10 +362,9 @@ func deleteOptions(
 
 func insertBlock(ctx context.Context, ex sqlx.ExecerContext, botUUID string, block bots.Block) error {
 	res, err := pgutils.Exec(ctx, ex,
-		`INSERT INTO
-            blocks (bot_uuid, state, type, next_state, title, text)
-        VALUES 
-            ($1, $2, $3, $4, $5, $6)`,
+		`INSERT INTO 
+			blocks (bot_uuid, state, type, next_state, title, text)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
 		botUUID, block.State, block.Type.String(), block.NextState, block.Title, block.Text,
 	)
 	if err != nil {
@@ -361,10 +408,10 @@ func selectOptions(
 		return nil, err
 	}
 
-	return mapOptionsFromDB(rows)
+	return convertOptionsFromDB(rows)
 }
 
-func mapOptionsFromDB(rows []optionRow) ([]bots.Option, error) {
+func convertOptionsFromDB(rows []optionRow) ([]bots.Option, error) {
 	res := make([]bots.Option, len(rows))
 	for i, row := range rows {
 		o, err := bots.NewOption(row.Text, row.Next)
@@ -381,21 +428,18 @@ func selectEntryPoints(
 ) ([]bots.EntryPoint, error) {
 	var rows []entryPointRow
 	err := pgutils.Select(ctx, q, &rows,
-		`SELECT
-			key, state
-		FROM 
-			entry_points
-		WHERE 
-			bot_uuid = $1`, botUUID,
+		`SELECT key, state
+		 FROM   entry_points
+		 WHERE  bot_uuid = $1`, botUUID,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return mapEntryPointsFromDB(rows)
+	return convertEntryPointsFromDB(rows)
 }
 
-func mapEntryPointsFromDB(rows []entryPointRow) ([]bots.EntryPoint, error) {
+func convertEntryPointsFromDB(rows []entryPointRow) ([]bots.EntryPoint, error) {
 	res := make([]bots.EntryPoint, len(rows))
 	for i, row := range rows {
 		e, err := bots.NewEntryPoint(row.Key, row.State)
@@ -407,16 +451,42 @@ func mapEntryPointsFromDB(rows []entryPointRow) ([]bots.EntryPoint, error) {
 	return res, nil
 }
 
+func selectMailings(
+	ctx context.Context, q sqlx.QueryerContext, botUUID string,
+) ([]bots.Mailing, error) {
+	var rows []mailingRow
+	err := pgutils.Select(ctx, q, &rows,
+		`SELECT name, entry_key, required_state 
+         FROM   mailings 
+         WHERE  bot_uuid = $1`, botUUID,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return convertMailingsFromDB(rows)
+}
+
+func convertMailingsFromDB(rows []mailingRow) ([]bots.Mailing, error) {
+	res := make([]bots.Mailing, len(rows))
+	for i, row := range rows {
+		m, err := bots.NewMailing(row.Name, row.EntryKey, row.RequiredState)
+		if err != nil {
+			return nil, err
+		}
+		res[i] = m
+	}
+	return res, nil
+}
+
 func selectBlocks(
 	ctx context.Context, q sqlx.QueryerContext, botUUID string,
 ) ([]bots.Block, error) {
 	var rows []blockRow
 	err := pgutils.Select(ctx, q, &rows,
-		`SELECT
-			type, state, next_state, title, text
-		FROM 
-			blocks
-		WHERE bot_uuid = $1`, botUUID,
+		`SELECT type, state, next_state, title, text
+		 FROM   blocks
+		 WHERE  bot_uuid = $1`, botUUID,
 	)
 	if err != nil {
 		return nil, err
@@ -428,7 +498,7 @@ func selectBlocks(
 		if err != nil {
 			return nil, err
 		}
-		block, err := bots.NewBlockFromDB(row.Type, row.State, row.NextState, options, row.Title, row.Text)
+		block, err := bots.UnmarshallBlockFromDB(row.Type, row.State, row.NextState, options, row.Title, row.Text)
 		if err != nil {
 			return nil, err
 		}
@@ -446,6 +516,12 @@ type optionRow struct {
 type entryPointRow struct {
 	Key   string `db:"key"`
 	State int    `db:"state"`
+}
+
+type mailingRow struct {
+	Name          string `db:"name"`
+	EntryKey      string `db:"entry_key"`
+	RequiredState int    `db:"required_state"`
 }
 
 type blockRow struct {

@@ -66,6 +66,7 @@ func testBotsRepository(t *testing.T, repos bots.Repository) {
 		err = repos.Update(ctx, bot.UUID, func(ctx context.Context, bot *bots.Bot) error {
 			err := bot.SetBlocks([]bots.EntryPoint{
 				bots.MustNewEntryPoint("start", 1),
+				bots.MustNewEntryPoint("mailing-1", 1),
 				bots.MustNewEntryPoint("another", 1),
 			}, []bots.Block{
 				bots.MustNewSelectionBlock(1, 2, []bots.Option{
@@ -156,6 +157,10 @@ func createBot(ownerUUID string) *bots.Bot {
 		ownerUUID,
 		[]bots.EntryPoint{
 			bots.MustNewEntryPoint("start", 1),
+			bots.MustNewEntryPoint("mailing-1", 1),
+		},
+		[]bots.Mailing{
+			bots.MustNewMailing("example", "mailing-1", 0),
 		},
 		[]bots.Block{
 			bots.MustNewSelectionBlock(1, 2, []bots.Option{
@@ -255,6 +260,33 @@ func equalEntriesSlices(a, b []bots.EntryPoint) bool {
 	return true
 }
 
+func equalMailings(a, b bots.Mailing) bool {
+	return a == b
+}
+
+func equalMailingsSlices(a, b []bots.Mailing) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	a = slices.Clone(a)
+	b = slices.Clone(b)
+
+	mailingComparator := func(a, b bots.Mailing) int {
+		return strings.Compare(a.EntryKey, b.EntryKey)
+	}
+
+	slices.SortFunc(a, mailingComparator)
+	slices.SortFunc(b, mailingComparator)
+
+	for i := range a {
+		if !equalMailings(a[i], b[i]) {
+			return false
+		}
+	}
+	return true
+}
+
 func equalBots(a, b bots.Bot) bool {
 	return a.UUID == b.UUID &&
 		a.OwnerUUID == b.OwnerUUID &&
@@ -263,6 +295,7 @@ func equalBots(a, b bots.Bot) bool {
 		a.CreatedAt.Sub(b.CreatedAt).Abs() < time.Microsecond &&
 		a.UpdatedAt.Sub(b.UpdatedAt).Abs() < time.Microsecond &&
 		equalEntriesSlices(a.Entries(), b.Entries()) &&
+		equalMailingsSlices(a.Mailings(), b.Mailings()) &&
 		equalBlocksSlices(a.Blocks(), b.Blocks())
 }
 

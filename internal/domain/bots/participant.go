@@ -42,7 +42,7 @@ func MustNewParticipant(
 	return p
 }
 
-func NewParticipantFromDB(
+func UnmarshallParticipantFromDB(
 	botUUID string,
 	id int64,
 	state int,
@@ -98,4 +98,13 @@ func (p *Participant) CleanAnswerIfExists(state int) {
 	if _, ok := p.answers[state]; ok {
 		delete(p.answers, state)
 	}
+}
+
+func (p *Participant) HasAnswer(state int) bool {
+	for s := range p.answers {
+		if s == state {
+			return true
+		}
+	}
+	return false
 }

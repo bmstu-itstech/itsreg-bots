@@ -169,7 +169,7 @@ func MustNewSelectionBlock(
 	return b
 }
 
-func NewBlockFromDB(
+func UnmarshallBlockFromDB(
 	blockType string,
 	state int,
 	next int,

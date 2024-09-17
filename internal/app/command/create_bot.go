@@ -10,14 +10,15 @@ import (
 )
 
 type CreateBot struct {
-	UserUUID string
+	AuthorUUID string
 
 	BotUUID string
 	Name    string
 	Token   string
 
-	Entries []types.EntryPoint
-	Blocks  []types.Block
+	Entries  []types.EntryPoint
+	Mailings []types.Mailing
+	Blocks   []types.Block
 }
 
 type CreateBotHandler decorator.CommandHandler[CreateBot]
@@ -49,12 +50,17 @@ func (h createBotHandler) Handle(ctx context.Context, cmd CreateBot) error {
 		return err
 	}
 
+	mailings, err := types.MapMailingsToDomain(cmd.Mailings)
+	if err != nil {
+		return err
+	}
+
 	blocks, err := types.MapBlocksToDomain(cmd.Blocks)
 	if err != nil {
 		return err
 	}
 
-	bot, err := bots.NewBot(cmd.BotUUID, cmd.UserUUID, entries, blocks, cmd.Name, cmd.Token)
+	bot, err := bots.NewBot(cmd.BotUUID, cmd.AuthorUUID, entries, mailings, blocks, cmd.Name, cmd.Token)
 	if err != nil {
 		return err
 	}

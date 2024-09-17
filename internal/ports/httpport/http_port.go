@@ -39,12 +39,13 @@ func (s Server) CreateBot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = s.app.Commands.CreateBot.Handle(r.Context(), command.CreateBot{
-		BotUUID:  postBots.BotUUID,
-		UserUUID: userUUID,
-		Name:     postBots.Name,
-		Token:    postBots.Token,
-		Entries:  mapEntryPointsFromAPI(postBots.Entries),
-		Blocks:   mapBlocksFromAPI(postBots.Blocks),
+		BotUUID:    postBots.BotUUID,
+		AuthorUUID: userUUID,
+		Name:       postBots.Name,
+		Token:      postBots.Token,
+		Entries:    convertEntryPointsFromAPI(postBots.Entries),
+		Mailings:   convertOptionalMailingsFromAPI(postBots.Mailings),
+		Blocks:     convertBlocksFromAPI(postBots.Blocks),
 	})
 	if errors.As(err, &commonerrs.InvalidInputError{}) {
 		httpError(w, r, err, http.StatusBadRequest)
@@ -78,7 +79,7 @@ func (s Server) GetBots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render.JSON(w, r, mapBotsToAPI(bs))
+	render.JSON(w, r, convertBotsToAPI(bs))
 }
 
 func (s Server) StartBot(w http.ResponseWriter, r *http.Request, uuid string) {
@@ -89,8 +90,8 @@ func (s Server) StartBot(w http.ResponseWriter, r *http.Request, uuid string) {
 	}
 
 	err = s.app.Commands.StartBot.Handle(r.Context(), command.StartBot{
-		UserUUID: userUUID,
-		BotUUID:  uuid,
+		AuthorUUID: userUUID,
+		BotUUID:    uuid,
 	})
 	if errors.As(err, &bots.BotNotFoundError{}) {
 		httpError(w, r, err, http.StatusNotFound)
@@ -114,8 +115,34 @@ func (s Server) StopBot(w http.ResponseWriter, r *http.Request, uuid string) {
 	}
 
 	err = s.app.Commands.StopBot.Handle(r.Context(), command.StopBot{
-		UserUUID: userUUID,
-		BotUUID:  uuid,
+		AuthorUUID: userUUID,
+		BotUUID:    uuid,
+	})
+	if errors.As(err, &bots.BotNotFoundError{}) {
+		httpError(w, r, err, http.StatusNotFound)
+		return
+	}
+	if errors.Is(err, bots.ErrPermissionDenied) {
+		httpError(w, r, err, http.StatusForbidden)
+		return
+	}
+	if err != nil {
+		httpError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+}
+
+func (s Server) StartMailing(w http.ResponseWriter, r *http.Request, uuid string, entryKey string) {
+	userUUID, err := jwtauth.UserUUIDFromContext(r.Context())
+	if err != nil {
+		httpError(w, r, err, http.StatusUnauthorized)
+		return
+	}
+
+	err = s.app.Commands.StartMailing.Handle(r.Context(), command.StartMailing{
+		AuthorUUID: userUUID,
+		BotUUID:    uuid,
+		EntryKey:   entryKey,
 	})
 	if errors.As(err, &bots.BotNotFoundError{}) {
 		httpError(w, r, err, http.StatusNotFound)
@@ -155,7 +182,7 @@ func (s Server) GetBot(w http.ResponseWriter, r *http.Request, uuid string) {
 		return
 	}
 
-	render.JSON(w, r, mapBotToAPI(bot))
+	render.JSON(w, r, convertBotToAPI(bot))
 }
 
 func (s Server) GetAnswers(w http.ResponseWriter, r *http.Request, uuid string) {
@@ -194,113 +221,153 @@ func httpError(w http.ResponseWriter, r *http.Request, err error, code int) {
 	render.JSON(w, r, Error{Message: err.Error()})
 }
 
-func mapOptionToAPI(option types.Option) Option {
+func convertOptionToAPI(option types.Option) Option {
 	return Option{
 		Next: option.Next,
 		Text: option.Text,
 	}
 }
 
-func mapOptionFromAPI(option Option) types.Option {
+func convertOptionFromAPI(option Option) types.Option {
 	return types.Option{
 		Text: option.Text,
 		Next: option.Next,
 	}
 }
 
-func mapOptionsToAPI(options []types.Option) *[]Option {
+func convertOptionsToAPI(options []types.Option) *[]Option {
 	res := make([]Option, len(options))
 	for i, option := range options {
-		res[i] = mapOptionToAPI(option)
+		res[i] = convertOptionToAPI(option)
 	}
 	return &res
 }
 
-func mapOptionsFromAPI(options *[]Option) []types.Option {
+func convertOptionsFromAPI(options *[]Option) []types.Option {
 	if options == nil {
 		return nil
 	}
 	res := make([]types.Option, len(*options))
 	for i, option := range *options {
-		res[i] = mapOptionFromAPI(option)
+		res[i] = convertOptionFromAPI(option)
 	}
 	return res
 }
 
-func mapEntryPointToAPI(entry types.EntryPoint) EntryPoint {
+func convertEntryPointToAPI(entry types.EntryPoint) EntryPoint {
 	return EntryPoint{
 		Key:   entry.Key,
 		State: entry.State,
 	}
 }
 
-func mapEntryPointFromAPI(entry EntryPoint) types.EntryPoint {
+func convertEntryPointFromAPI(entry EntryPoint) types.EntryPoint {
 	return types.EntryPoint{
 		Key:   entry.Key,
 		State: entry.State,
 	}
 }
 
-func mapEntryPointsToAPI(entries []types.EntryPoint) []EntryPoint {
+func convertEntryPointsToAPI(entries []types.EntryPoint) []EntryPoint {
 	res := make([]EntryPoint, len(entries))
 	for i, entry := range entries {
-		res[i] = mapEntryPointToAPI(entry)
+		res[i] = convertEntryPointToAPI(entry)
 	}
 	return res
 }
 
-func mapEntryPointsFromAPI(entries []EntryPoint) []types.EntryPoint {
+func convertEntryPointsFromAPI(entries []EntryPoint) []types.EntryPoint {
 	res := make([]types.EntryPoint, len(entries))
 	for i, entry := range entries {
-		res[i] = mapEntryPointFromAPI(entry)
+		res[i] = convertEntryPointFromAPI(entry)
 	}
 	return res
 }
 
-func mapBlockToAPI(block types.Block) Block {
+func convertMailingToAPI(mailing types.Mailing) Mailing {
+	return Mailing{
+		EntryKey:      mailing.EntryKey,
+		Name:          mailing.Name,
+		RequiredState: mailing.RequiredState,
+	}
+}
+
+func convertMailingsToAPI(mailings []types.Mailing) []Mailing {
+	res := make([]Mailing, len(mailings))
+	for i, mailing := range mailings {
+		res[i] = convertMailingToAPI(mailing)
+	}
+	return res
+}
+
+func convertMailingFromAPI(mailing Mailing) types.Mailing {
+	return types.Mailing{
+		Name:          mailing.Name,
+		EntryKey:      mailing.EntryKey,
+		RequiredState: mailing.RequiredState,
+	}
+}
+
+func convertMailingsFromAPI(mailings []Mailing) []types.Mailing {
+	res := make([]types.Mailing, len(mailings))
+	for i, mailing := range mailings {
+		res[i] = convertMailingFromAPI(mailing)
+	}
+	return res
+}
+
+func convertOptionalMailingsFromAPI(mailings *[]Mailing) []types.Mailing {
+	if mailings == nil {
+		return make([]types.Mailing, 0)
+	}
+
+	return convertMailingsFromAPI(*mailings)
+}
+
+func convertBlockToAPI(block types.Block) Block {
 	return Block{
 		Type:      BlockType(block.Type),
 		NextState: block.NextState,
-		Options:   mapOptionsToAPI(block.Options),
+		Options:   convertOptionsToAPI(block.Options),
 		State:     block.State,
 		Text:      block.Text,
 		Title:     block.Title,
 	}
 }
 
-func mapBlockFromAPI(block Block) types.Block {
+func convertBlockFromAPI(block Block) types.Block {
 	return types.Block{
 		Type:      string(block.Type),
 		State:     block.State,
 		NextState: block.NextState,
-		Options:   mapOptionsFromAPI(block.Options),
+		Options:   convertOptionsFromAPI(block.Options),
 		Title:     block.Title,
 		Text:      block.Text,
 	}
 }
 
-func mapBlocksToAPI(blocks []types.Block) []Block {
+func convertBlocksToAPI(blocks []types.Block) []Block {
 	res := make([]Block, len(blocks))
 	for i, block := range blocks {
-		res[i] = mapBlockToAPI(block)
+		res[i] = convertBlockToAPI(block)
 	}
 	return res
 }
 
-func mapBlocksFromAPI(blocks []Block) []types.Block {
+func convertBlocksFromAPI(blocks []Block) []types.Block {
 	res := make([]types.Block, len(blocks))
 	for i, block := range blocks {
-		res[i] = mapBlockFromAPI(block)
+		res[i] = convertBlockFromAPI(block)
 	}
 	return res
 }
 
-func mapBotToAPI(bot types.Bot) Bot {
+func convertBotToAPI(bot types.Bot) Bot {
 	return Bot{
-		Blocks:    mapBlocksToAPI(bot.Blocks),
+		Blocks:    convertBlocksToAPI(bot.Blocks),
 		BotUUID:   bot.UUID,
 		CreatedAt: bot.CreatedAt,
-		Entries:   mapEntryPointsToAPI(bot.Entries),
+		Entries:   convertEntryPointsToAPI(bot.Entries),
 		Name:      bot.Name,
 		Status:    BotStatus(bot.Status),
 		Token:     bot.Token,
@@ -308,10 +375,10 @@ func mapBotToAPI(bot types.Bot) Bot {
 	}
 }
 
-func mapBotsToAPI(bs []types.Bot) []Bot {
+func convertBotsToAPI(bs []types.Bot) []Bot {
 	res := make([]Bot, len(bs))
 	for i, b := range bs {
-		res[i] = mapBotToAPI(b)
+		res[i] = convertBotToAPI(b)
 	}
 	return res
 }

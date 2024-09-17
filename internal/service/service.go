@@ -83,6 +83,7 @@ func newApplication(
 			UpdateStatus: command.NewUpdateStatusHandler(bots, logger, metricsClient),
 			Entry:        command.NewEntryHandler(bots, participants, msgPub, logger, metricsClient),
 			Process:      command.NewProcessHandler(bots, participants, msgPub, logger, metricsClient),
+			StartMailing: command.NewStartMailingHandler(bots, participants, msgPub, logger, metricsClient),
 		},
 		Queries: app.Queries{
 			AllAnswers: query.NewGetAnswersTableHandler(bots, participants, logger, metricsClient),

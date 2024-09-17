@@ -15,6 +15,7 @@ type Bot struct {
 
 	entryPoints map[string]EntryPoint
 	blocks      map[int]Block
+	mailings    map[string]Mailing
 
 	Name   string
 	Token  string
@@ -28,6 +29,7 @@ func NewBot(
 	uuid string,
 	ownerUUID string,
 	entries []EntryPoint,
+	mailings []Mailing,
 	blocks []Block,
 	name string,
 	token string,
@@ -42,6 +44,10 @@ func NewBot(
 
 	if len(entries) == 0 {
 		return nil, commonerrs.NewInvalidInputError("expected not empty entries")
+	}
+
+	if mailings == nil {
+		mailings = make([]Mailing, 0)
 	}
 
 	if len(blocks) == 0 {
@@ -90,17 +96,31 @@ func NewBot(
 		return nil, newUnusedBlockFoundError(whiteVertexState)
 	}
 
-	return &Bot{
-		UUID:      uuid,
-		OwnerUUID: ownerUUID,
-		Name:      name,
-		Token:     token,
-		Status:    Stopped,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	ms, err := mapMailings(mailings)
+	if err != nil {
+		return nil, err
+	}
 
+	for entryKey, mailing := range ms {
+		if _, ok := es[entryKey]; !ok {
+			return nil, commonerrs.NewInvalidInputErrorf(
+				"mailing %q has non-existent entry key %q",
+				mailing.Name, entryKey,
+			)
+		}
+	}
+
+	return &Bot{
+		UUID:        uuid,
+		OwnerUUID:   ownerUUID,
 		entryPoints: es,
 		blocks:      bs,
+		mailings:    ms,
+		Name:        name,
+		Token:       token,
+		Status:      Stopped,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}, nil
 }
 
@@ -108,21 +128,23 @@ func MustNewBot(
 	uuid string,
 	ownerUUID string,
 	entryPoints []EntryPoint,
+	mailings []Mailing,
 	blocks []Block,
 	name string,
 	token string,
 ) *Bot {
-	b, err := NewBot(uuid, ownerUUID, entryPoints, blocks, name, token)
+	b, err := NewBot(uuid, ownerUUID, entryPoints, mailings, blocks, name, token)
 	if err != nil {
 		panic(err)
 	}
 	return b
 }
 
-func NewBotFromDB(
+func UnmarshallBotFromDB(
 	uuid string,
 	ownerUUID string,
 	entries []EntryPoint,
+	mailings []Mailing,
 	blocks []Block,
 	name string,
 	token string,
@@ -136,10 +158,6 @@ func NewBotFromDB(
 
 	if ownerUUID == "" {
 		return nil, commonerrs.NewInvalidInputError("expected not empty owner uuid")
-	}
-
-	if blocks == nil {
-		return nil, commonerrs.NewInvalidInputError("expected not empty blocks")
 	}
 
 	if name == "" {
@@ -162,6 +180,18 @@ func NewBotFromDB(
 		return nil, commonerrs.NewInvalidInputError("expected not empty updated at timestamp")
 	}
 
+	if len(blocks) == 0 {
+		return nil, commonerrs.NewInvalidInputError("expected not empty blocks")
+	}
+
+	if len(entries) == 0 {
+		return nil, commonerrs.NewInvalidInputError("expected not empty entries")
+	}
+
+	if mailings == nil {
+		mailings = make([]Mailing, 0)
+	}
+
 	bs, err := mapBlocks(blocks)
 	if err != nil {
 		return nil, err
@@ -170,6 +200,17 @@ func NewBotFromDB(
 	es, err := mapEntries(entries)
 	if err != nil {
 		return nil, err
+	}
+
+	ms, err := mapMailings(mailings)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, m := range mailings {
+		if m.IsZero() {
+			return nil, commonerrs.NewInvalidInputError("expected not empty mailing")
+		}
 	}
 
 	st, err := NewStatusFromString(status)
@@ -182,6 +223,7 @@ func NewBotFromDB(
 		OwnerUUID:   ownerUUID,
 		entryPoints: es,
 		blocks:      bs,
+		mailings:    ms,
 		Name:        name,
 		Token:       token,
 		Status:      st,
@@ -222,6 +264,30 @@ func (b *Bot) Entries() []EntryPoint {
 		entries = append(entries, entry)
 	}
 	return entries
+}
+
+func (b *Bot) Mailings() []Mailing {
+	mailings := make([]Mailing, 0, len(b.mailings))
+	for _, m := range b.mailings {
+		mailings = append(mailings, m)
+	}
+	return mailings
+}
+
+type MailingNotFoundError struct {
+	EntryKey string
+}
+
+func (e MailingNotFoundError) Error() string {
+	return fmt.Sprintf("mailing with entry key '%s' not found", e.EntryKey)
+}
+
+func (b *Bot) Mailing(entryKey string) (Mailing, error) {
+	m, ok := b.mailings[entryKey]
+	if !ok {
+		return Mailing{}, MailingNotFoundError{entryKey}
+	}
+	return m, nil
 }
 
 func (b *Bot) SetBlocks(entries []EntryPoint, blocks []Block) error {
@@ -316,6 +382,12 @@ func newEntryIsDuplicatedError(key string) error {
 	)
 }
 
+func newMailingIsDuplicatedError(key string) error {
+	return commonerrs.NewInvalidInputError(
+		fmt.Sprintf("mailing with key '%s' is duplicated", key),
+	)
+}
+
 func mapBlocks(blocks []Block) (map[int]Block, error) {
 	mapped := make(map[int]Block)
 	for _, block := range blocks {
@@ -334,6 +406,17 @@ func mapEntries(entries []EntryPoint) (map[string]EntryPoint, error) {
 			return nil, newEntryIsDuplicatedError(entry.Key)
 		}
 		mapped[entry.Key] = entry
+	}
+	return mapped, nil
+}
+
+func mapMailings(mailings []Mailing) (map[string]Mailing, error) {
+	mapped := make(map[string]Mailing)
+	for _, mailing := range mailings {
+		if _, ok := mapped[mailing.Name]; ok {
+			return nil, newMailingIsDuplicatedError(mailing.Name)
+		}
+		mapped[mailing.EntryKey] = mailing
 	}
 	return mapped, nil
 }
