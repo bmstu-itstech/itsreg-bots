@@ -35,8 +35,8 @@ func NewApplication() (
 	botsR := infra.NewPgBotsRepository(db)
 	participants := infra.NewPgParticipantsRepository(db)
 
-	msgPub, msgCh, senderClose := infra.NewAmqpMessagesPublisher()
-	runPub, runCh, senderClose := infra.NewAmqpRunnerPublisher()
+	msgPub, msgCh, senderClose := infra.NewNATSMessagesPublisher()
+	runPub, runCh, senderClose := infra.NewNATSRunnerPublisher()
 
 	return newApplication(
 			logger, metricsClient, botsR, participants, msgPub, runPub,

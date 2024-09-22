@@ -47,7 +47,7 @@ func NewAmqpMessagesPublisher() (bots.MessagesPublisher, <-chan *message.Message
 }
 
 func (s *amqpMessagesPublisher) Publish(_ context.Context, botUUID string, userID int64, msg bots.Message) error {
-	dto := mapMessageToDTO(botUUID, userID, msg)
+	dto := mapBotMessageToAMPQ(botUUID, userID, msg)
 
 	b, err := json.Marshal(dto)
 	if err != nil {
@@ -58,15 +58,15 @@ func (s *amqpMessagesPublisher) Publish(_ context.Context, botUUID string, userI
 	return s.pub.Publish(messagesTopic, wmMsg)
 }
 
-type amqpMessage struct {
+type ampqBotMessage struct {
 	BotUUID string   `json:"bot_uuid"`
 	UserID  int64    `json:"user_id"`
 	Text    string   `json:"text"`
 	Buttons []string `json:"buttons"`
 }
 
-func mapMessageToDTO(botUUID string, userID int64, msg bots.Message) amqpMessage {
-	return amqpMessage{
+func mapBotMessageToAMPQ(botUUID string, userID int64, msg bots.Message) ampqBotMessage {
+	return ampqBotMessage{
 		BotUUID: botUUID,
 		UserID:  userID,
 		Text:    msg.Text,

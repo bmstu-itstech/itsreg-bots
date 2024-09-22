@@ -38,7 +38,7 @@ services:
     depends_on:
       bots-db:
         condition: service_healthy
-      bots-rabbitmq:
+      bots-nats:
         condition: service_started
     networks:
       - ir-web-bots
@@ -78,23 +78,15 @@ services:
       bots-db:
         condition: service_healthy
 
-  bots-rabbitmq:
-    image: rabbitmq:3.13-management-alpine
-    container_name: ir-bots-rabbitmq
-    restart: unless-stopped
+  bots-nats:
+    image: nats:alpine
+    container_name: ir-bots-nats
+    restart: always
     ports:
-      - 15672:15672
-      - 5672:5672
-    environment:
-      RABBITMQ_DEFAULT_USER: $RABBITMQ_USER
-      RABBITMQ_DEFAULT_PASS: $RABBITMQ_PASSWORD
+      - "4222:4222"
+      - "8222:8222"
     volumes:
-      - ~/.docker/rabbitmq/data/:/var/lib/rabbitmq/
-      - ~/.docker/rabbitmq/log/:/var/log/rabbitmq
-    networks:
-      ir-web-bots:
-        aliases:
-          - rabbitmq
+      - ~/.docker/itsreg/nats/data:/data
 
 networks:
   ir-web-bots:

@@ -5,22 +5,15 @@ services:
       context: ../
       args:
         SERVICE: http
-    volumes:
-      - ../.go/pkg:/go/pkg
-      - ../.go-cache:/go-cache
-    environment:
-      GOCACHE: /go-cache
     ports:
-      - 8400:$PORT
+      - 8400:${PORT:-8400}
     env_file:
       - ../.env
     depends_on:
       bots-db:
         condition: service_healthy
-        restart: true
-      bots-rabbitmq:
+      bots-nats:
         condition: service_started
-        restart: true
     networks:
       - ir-web-bots
 
@@ -30,20 +23,13 @@ services:
       context: ../
       args:
         SERVICE: telegram
-    volumes:
-      - ../.go/pkg:/go/pkg
-      - ../.go-cache:/go-cache
-    environment:
-      GOCACHE: /go-cache
     env_file:
       - ../.env
     depends_on:
       bots-db:
         condition: service_healthy
-        restart: true
-      bots-rabbitmq:
+      bots-nats:
         condition: service_started
-        restart: true
     networks:
       - ir-web-bots
 
@@ -52,7 +38,7 @@ services:
     container_name: ir-bots-postgres
     command: postgres
     ports:
-      - 54321:5432
+      - "54321:5432"
     env_file:
       - ../.env
     healthcheck:
@@ -80,23 +66,19 @@ services:
       bots-db:
         condition: service_healthy
 
-  bots-rabbitmq:
-    image: rabbitmq:3.13-management-alpine
-    container_name: ir-bots-rabbitmq
-    restart: unless-stopped
+  bots-nats:
+    image: nats:alpine
+    container_name: ir-bots-nats
+    restart: always
     ports:
-      - 15672:15672
-      - 5672:5672
-    environment:
-      RABBITMQ_DEFAULT_USER: $RABBITMQ_USER
-      RABBITMQ_DEFAULT_PASS: $RABBITMQ_PASSWORD
+      - "4222:4222"
+      - "8222:8222"
     volumes:
-      - ~/.docker/rabbitmq/data/:/var/lib/rabbitmq/
-      - ~/.docker/rabbitmq/log/:/var/log/rabbitmq
+      - ~/.docker/itsreg/nats/data:/data
     networks:
       ir-web-bots:
         aliases:
-          - rabbitmq
+          - nats
 
 networks:
   ir-web-bots:

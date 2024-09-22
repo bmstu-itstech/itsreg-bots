@@ -1,12 +1,23 @@
-FROM golang:1.22
+FROM golang:1.22 AS builder
 
 ARG SERVICE
 
-WORKDIR /
+WORKDIR /app
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
 
-ADD go.mod .
 COPY . .
 
-RUN go build -o /app cmd/$SERVICE/$SERVICE.go
+ENV GOCACHE=/root/.cache/go-build
+RUN --mount=type=cache,target="/root/.cache/go-build" go build -o app cmd/$SERVICE/$SERVICE.go
 
-CMD ["/app"]
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y ca-certificates
+
+RUN mkdir /app
+WORKDIR /app
+COPY --from=builder /app/app .
+
+CMD ["./app"]

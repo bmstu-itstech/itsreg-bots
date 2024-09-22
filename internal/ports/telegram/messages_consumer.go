@@ -33,15 +33,16 @@ func (c *messagesConsumer) Process() {
 		botMsg, err := unmarshalBotMessage(msg)
 		if err != nil {
 			c.log.Error("failed to unmarshal bot message", "error", err.Error())
+			msg.Nack()
 			continue
 		}
 
 		err = c.h(msg.Context(), botMsg)
 		if err != nil {
 			c.log.Error("failed to handle bot message", "error", err.Error())
+			msg.Nack()
 			continue
 		}
-
 		msg.Ack()
 	}
 }

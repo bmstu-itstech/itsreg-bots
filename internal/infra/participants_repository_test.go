@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	botUUID = gofakeit.UUID()
+	randomBotUUID = gofakeit.UUID()
 )
 
 func TestPgParticipantsRepository(t *testing.T) {
@@ -47,16 +47,16 @@ func testParticipantsRepository(t *testing.T, repos bots.ParticipantRepository) 
 		ctx := context.Background()
 
 		userID := gofakeit.Int64()
-		err := repos.UpdateOrCreate(ctx, botUUID, userID, func(ctx context.Context, prt *bots.Participant) error {
+		err := repos.UpdateOrCreate(ctx, randomBotUUID, userID, func(ctx context.Context, prt *bots.Participant) error {
 			prt.SwitchTo(1)
 			return prt.AddAnswer("answer")
 		})
 		require.NoError(t, err)
 
-		participants, err := repos.ParticipantsOfBot(ctx, botUUID)
+		participants, err := repos.ParticipantsOfBot(ctx, randomBotUUID)
 		require.NoError(t, err)
 
-		expected := bots.MustNewParticipant(botUUID, userID)
+		expected := bots.MustNewParticipant(randomBotUUID, userID)
 		expected.SwitchTo(1)
 		require.NoError(t, expected.AddAnswer("answer"))
 		require.Contains(t, participants, expected)
@@ -68,23 +68,23 @@ func testParticipantsRepository(t *testing.T, repos bots.ParticipantRepository) 
 		ctx := context.Background()
 
 		userID := gofakeit.Int64()
-		err := repos.UpdateOrCreate(ctx, botUUID, userID, func(ctx context.Context, prt *bots.Participant) error {
+		err := repos.UpdateOrCreate(ctx, randomBotUUID, userID, func(ctx context.Context, prt *bots.Participant) error {
 			prt.SwitchTo(1)
 			return nil
 		})
 		require.NoError(t, err)
 
-		err = repos.UpdateOrCreate(ctx, botUUID, userID, func(ctx context.Context, prt *bots.Participant) error {
+		err = repos.UpdateOrCreate(ctx, randomBotUUID, userID, func(ctx context.Context, prt *bots.Participant) error {
 			require.Equal(t, 1, prt.State)
 			prt.SwitchTo(2)
 			return nil
 		})
 		require.NoError(t, err)
 
-		participants, err := repos.ParticipantsOfBot(ctx, botUUID)
+		participants, err := repos.ParticipantsOfBot(ctx, randomBotUUID)
 		require.NoError(t, err)
 
-		expected := bots.MustNewParticipant(botUUID, userID)
+		expected := bots.MustNewParticipant(randomBotUUID, userID)
 		expected.SwitchTo(2)
 		require.Contains(t, participants, expected)
 	})
@@ -97,7 +97,7 @@ func setupDBParticipants(ctx context.Context, db *sqlx.DB) error {
 				bots (uuid, name, token, status, created_at, updated_at) 
 			VALUES 
 				($1, $2, $3, $4, $5, $6)`,
-			botUUID, gofakeit.Name(), gofakeit.UUID(), "stopped", time.Now(), time.Now(),
+			randomBotUUID, gofakeit.Name(), gofakeit.UUID(), "stopped", time.Now(), time.Now(),
 		)
 		if err != nil {
 			return err
@@ -109,8 +109,8 @@ func setupDBParticipants(ctx context.Context, db *sqlx.DB) error {
 			VALUES 
 				($1, $2, $3, $4, $5, $6),
 				($7, $8, $9, $10, $11, $12)`,
-			botUUID, 1, "question", 0, "Question 1", "Some text",
-			botUUID, 2, "question", 0, "Question 2", "Some text",
+			randomBotUUID, 1, "question", 0, "Question 1", "Some text",
+			randomBotUUID, 2, "question", 0, "Question 2", "Some text",
 		)
 		if err != nil {
 			return err

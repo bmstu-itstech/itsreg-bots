@@ -3,12 +3,13 @@ package telegram
 import (
 	"context"
 	"fmt"
-	"github.com/bmstu-itstech/itsreg-bots/internal/common/logs"
 	"log/slog"
 	"sync"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+
 	"github.com/bmstu-itstech/itsreg-bots/internal/app"
+	"github.com/bmstu-itstech/itsreg-bots/internal/common/logs"
 )
 
 type Port struct {

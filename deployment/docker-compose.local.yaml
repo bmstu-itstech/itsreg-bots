@@ -32,13 +32,15 @@ services:
     networks:
       - ir-web-bots
 
-  bots-rabbitmq:
-    image: rabbitmq:3.13-management-alpine
-    container_name: ir-bots-rabbitmq
-    restart: unless-stopped
+  bots-nats:
+    image: nats:alpine
+    container_name: ir-bots-nats
+    restart: always
     ports:
-      - 15672:15672
-      - 5672:5672
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - ~/.docker/itsreg/nats/data:/data
 
 networks:
   ir-web-bots:
