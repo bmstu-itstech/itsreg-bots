@@ -18,7 +18,7 @@ type ServerInterface interface {
 	// (GET /bots)
 	GetBots(w http.ResponseWriter, r *http.Request)
 
-	// (POST /bots)
+	// (PUT /bots)
 	CreateBot(w http.ResponseWriter, r *http.Request)
 
 	// (GET /bots/{uuid})
@@ -46,7 +46,7 @@ func (_ Unimplemented) GetBots(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// (POST /bots)
+// (PUT /bots)
 func (_ Unimplemented) CreateBot(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
@@ -385,7 +385,7 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/bots", wrapper.GetBots)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/bots", wrapper.CreateBot)
+		r.Put(options.BaseURL+"/bots", wrapper.CreateBot)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/bots/{uuid}", wrapper.GetBot)
