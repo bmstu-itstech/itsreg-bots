@@ -1,6 +1,8 @@
 package server
 
 import (
+	"github.com/bmstu-itstech/itsreg-bots/internal/common/jwtauth"
+	"github.com/bmstu-itstech/itsreg-bots/internal/common/logs/sl"
 	"log/slog"
 	"net/http"
 	"os"
@@ -10,9 +12,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
-	"github.com/bmstu-itstech/itsreg-bots/internal/common/jwtauth"
 	"github.com/bmstu-itstech/itsreg-bots/internal/common/logs"
-	"github.com/bmstu-itstech/itsreg-bots/internal/common/logs/sl"
 )
 
 func RunHTTPServer(createHandler func(router chi.Router) http.Handler) {
@@ -42,7 +42,6 @@ func setMiddlewares(router *chi.Mux, log *slog.Logger) {
 	router.Use(middleware.RealIP)
 	router.Use(sl.NewLoggerMiddleware(log))
 	router.Use(middleware.Recoverer)
-	router.Use(jwtauth.HTTPMiddleware)
 
 	addCorsMiddleware(router)
 
@@ -51,6 +50,7 @@ func setMiddlewares(router *chi.Mux, log *slog.Logger) {
 		middleware.SetHeader("X-Frame-Options", "deny"),
 	)
 	router.Use(middleware.NoCache)
+	router.Use(jwtauth.HTTPMiddleware)
 }
 
 func addCorsMiddleware(router *chi.Mux) {
