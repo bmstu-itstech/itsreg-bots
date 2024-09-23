@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/bmstu-itstech/itsreg-bots/internal/common/server"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+
+	"github.com/bmstu-itstech/itsreg-bots/internal/common/server"
 	"github.com/bmstu-itstech/itsreg-bots/internal/ports/httpport"
 	"github.com/bmstu-itstech/itsreg-bots/internal/service"
-	"github.com/go-chi/chi/v5"
 )
 
 func main() {

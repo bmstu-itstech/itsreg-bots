@@ -33,7 +33,7 @@ func NewGetBotsHandler(
 }
 
 func (h getBotsHandler) Handle(ctx context.Context, query GetBots) ([]types.Bot, error) {
-	bs, err := h.bots.Bots(ctx, query.UserUUID)
+	bs, err := h.bots.UserBots(ctx, query.UserUUID)
 	if err != nil {
 		return nil, err
 	}

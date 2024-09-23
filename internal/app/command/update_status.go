@@ -42,8 +42,5 @@ func (h updateStatusHandler) Handle(ctx context.Context, cmd UpdateStatus) error
 		return err
 	}
 
-	return h.bots.Update(ctx, cmd.BotUUID, func(innerCtx context.Context, bot *bots.Bot) error {
-		bot.SetStatus(st)
-		return nil
-	})
+	return h.bots.UpdateStatus(ctx, cmd.BotUUID, st)
 }

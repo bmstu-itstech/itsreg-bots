@@ -185,6 +185,19 @@ func mapAnswersFromDB(rows []answerRow) ([]bots.Answer, error) {
 	return res, nil
 }
 
+func checkInsertResult(res sql.Result) error {
+	aff, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if aff == 0 {
+		return errors.New("no affected rows")
+	}
+
+	return nil
+}
+
 type participantRow struct {
 	BotUUID string `db:"bot_uuid"`
 	UserID  int64  `db:"user_id"`

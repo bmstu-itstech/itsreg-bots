@@ -13,22 +13,11 @@ func (e BotNotFoundError) Error() string {
 	return fmt.Sprintf("bot not found: %s", e.UUID)
 }
 
-type BotAlreadyExistsError struct {
-	UUID string
-}
-
-func (e BotAlreadyExistsError) Error() string {
-	return fmt.Sprintf("bot already exists: %s", e.UUID)
-}
-
 type Repository interface {
-	Save(ctx context.Context, bot *Bot) error
-	Bot(ctx context.Context, uuid string) (*Bot, error)
-	Bots(ctx context.Context, userUUID string) ([]*Bot, error)
-	Update(
-		ctx context.Context,
-		uuid string,
-		updateFn func(context.Context, *Bot) error,
-	) error
+	UpdateOrCreate(ctx context.Context, bot *Bot) error
+	UpdateStatus(ctx context.Context, botUUID string, status Status) error
 	Delete(ctx context.Context, uuid string) error
+
+	Bot(ctx context.Context, uuid string) (*Bot, error)
+	UserBots(ctx context.Context, userUUID string) ([]*Bot, error)
 }

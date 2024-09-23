@@ -65,7 +65,7 @@ func (h createBotHandler) Handle(ctx context.Context, cmd CreateBot) error {
 		return err
 	}
 
-	err = h.bots.Save(ctx, bot)
+	err = h.bots.UpdateOrCreate(ctx, bot)
 	if err != nil {
 		return err
 	}

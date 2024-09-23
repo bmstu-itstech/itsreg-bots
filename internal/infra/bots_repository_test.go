@@ -43,7 +43,7 @@ func testBotsRepository(t *testing.T, repos bots.Repository) {
 
 		bot := createBot(gofakeit.UUID())
 
-		err := repos.Save(ctx, bot)
+		err := repos.UpdateOrCreate(ctx, bot)
 		require.NoError(t, err)
 
 		got, err := repos.Bot(ctx, bot.UUID)
@@ -52,44 +52,25 @@ func testBotsRepository(t *testing.T, repos bots.Repository) {
 		requireBot(t, *bot, *got)
 	})
 
-	t.Run("should update bot", func(t *testing.T) {
+	t.Run("should replace bot", func(t *testing.T) {
 		t.Parallel()
 
 		ctx := context.Background()
 
-		bot := createBot(gofakeit.UUID())
+		botUUID := gofakeit.UUID()
+		bot := createBot(botUUID)
 
-		err := repos.Save(ctx, bot)
+		err := repos.UpdateOrCreate(ctx, bot)
 		require.NoError(t, err)
 
-		var newBot bots.Bot
-		err = repos.Update(ctx, bot.UUID, func(ctx context.Context, bot *bots.Bot) error {
-			err := bot.SetBlocks([]bots.EntryPoint{
-				bots.MustNewEntryPoint("start", 1),
-				bots.MustNewEntryPoint("mailing-1", 1),
-				bots.MustNewEntryPoint("another", 1),
-			}, []bots.Block{
-				bots.MustNewSelectionBlock(1, 2, []bots.Option{
-					bots.MustNewOption("To 3", 3),
-				},
-					"Selection",
-					"Choose option",
-				),
-				bots.MustNewMessageBlock(2, 1, "Error", "Choose one option!"),
-				bots.MustNewQuestionBlock(3, 0, "Question", "Some question"),
-			})
-			if err != nil {
-				return err
-			}
-			newBot = *bot
-			return nil
-		})
+		newBot := createBot(botUUID)
+		err = repos.UpdateOrCreate(ctx, newBot)
 		require.NoError(t, err)
 
 		got, err := repos.Bot(ctx, bot.UUID)
 		require.NoError(t, err)
 		require.NotNil(t, got)
-		requireBot(t, newBot, *got)
+		requireBot(t, *bot, *got)
 	})
 
 	t.Run("should return error if bot not found", func(t *testing.T) {
@@ -108,7 +89,7 @@ func testBotsRepository(t *testing.T, repos bots.Repository) {
 
 		bot := createBot(gofakeit.UUID())
 
-		err := repos.Save(ctx, bot)
+		err := repos.UpdateOrCreate(ctx, bot)
 		require.NoError(t, err)
 
 		err = repos.Delete(ctx, bot.UUID)
@@ -126,14 +107,14 @@ func testBotsRepository(t *testing.T, repos bots.Repository) {
 		ownerUUID := gofakeit.UUID()
 
 		bot1 := createBot(ownerUUID)
-		err := repos.Save(context.Background(), bot1)
+		err := repos.UpdateOrCreate(context.Background(), bot1)
 		require.NoError(t, err)
 
 		bot2 := createBot(ownerUUID)
-		err = repos.Save(context.Background(), bot2)
+		err = repos.UpdateOrCreate(context.Background(), bot2)
 		require.NoError(t, err)
 
-		bs, err := repos.Bots(ctx, ownerUUID)
+		bs, err := repos.UserBots(ctx, ownerUUID)
 		expected := []*bots.Bot{bot1, bot2}
 		requireBotsSlices(t, expected, bs)
 	})
@@ -145,9 +126,26 @@ func testBotsRepository(t *testing.T, repos bots.Repository) {
 
 		ownerUUID := gofakeit.UUID()
 
-		bs, err := repos.Bots(ctx, ownerUUID)
+		bs, err := repos.UserBots(ctx, ownerUUID)
 		require.NoError(t, err)
 		require.Empty(t, bs)
+	})
+
+	t.Run("should update status", func(t *testing.T) {
+		t.Parallel()
+
+		ctx := context.Background()
+
+		bot := createBot(gofakeit.UUID())
+		err := repos.UpdateOrCreate(ctx, bot)
+		require.NoError(t, err)
+
+		err = repos.UpdateStatus(ctx, bot.UUID, bots.Started)
+		require.NoError(t, err)
+
+		got, err := repos.Bot(ctx, bot.UUID)
+		require.NoError(t, err)
+		require.Equal(t, bots.Started, got.Status)
 	})
 }
 
