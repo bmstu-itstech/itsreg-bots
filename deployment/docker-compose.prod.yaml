@@ -5,11 +5,6 @@ services:
       context: ../
       args:
         SERVICE: http
-    volumes:
-      - ../.go/pkg:/go/pkg
-      - ../.go-cache:/go-cache
-    environment:
-      GOCACHE: /go-cache
     ports:
       - 8400:${PORT:-8400}
     env_file:
@@ -17,7 +12,7 @@ services:
     depends_on:
       bots-db:
         condition: service_healthy
-      bots-rabbitmq:
+      bots-nats:
         condition: service_started
     networks:
       - ir-web-bots
@@ -28,11 +23,6 @@ services:
       context: ../
       args:
         SERVICE: telegram
-    volumes:
-      - ../.go/pkg:/go/pkg
-      - ../.go-cache:/go-cache
-    environment:
-      GOCACHE: /go-cache
     env_file:
       - ../.env
     depends_on:
@@ -48,11 +38,9 @@ services:
     container_name: ir-bots-postgres
     command: postgres
     ports:
-      - 54001:5432
+      - "54321:5432"
     env_file:
       - ../.env
-    volumes:
-      - ~/docker/itsreg/postgresql:/var/lib/postgresql
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB" ]
       interval: 5s
@@ -87,6 +75,10 @@ services:
       - "8222:8222"
     volumes:
       - ~/.docker/itsreg/nats/data:/data
+    networks:
+      ir-web-bots:
+        aliases:
+          - nats
 
 networks:
   ir-web-bots:
