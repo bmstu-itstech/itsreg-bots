@@ -8,6 +8,8 @@ import (
 	"github.com/bmstu-itstech/itsreg-bots/internal/common/commonerrs"
 )
 
+const startEntryKey = "start"
+
 type Bot struct {
 	UUID string
 
@@ -77,6 +79,10 @@ func NewBot(
 		if block.IsZero() {
 			return nil, commonerrs.NewInvalidInputError("expected not empty block")
 		}
+	}
+
+	if _, ok := es[startEntryKey]; !ok {
+		return nil, commonerrs.NewInvalidInputErrorf("expected has start entry %q", startEntryKey)
 	}
 
 	bs, err := mapBlocks(blocks)
