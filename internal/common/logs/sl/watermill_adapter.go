@@ -17,7 +17,8 @@ func NewWatermillLoggerAdapter(log *slog.Logger) watermill.LoggerAdapter {
 }
 
 func (s watermillLoggerAdapter) Error(msg string, err error, fields watermill.LogFields) {
-	s.log.Error(msg, "err", err, s.attrs(fields))
+	fields = fields.Add(map[string]any{"error": err})
+	s.log.Error(msg, s.attrs(fields)...)
 }
 
 func (s watermillLoggerAdapter) Info(msg string, fields watermill.LogFields) {
