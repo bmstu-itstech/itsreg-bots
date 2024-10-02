@@ -372,9 +372,23 @@ type blockRow struct {
 	BotUUID   string `db:"bot_uuid"`
 	Type      string `db:"type"`
 	State     int    `db:"state"`
-	NextState int    `db:"next_state"`
+	NextState *int   `db:"next_state"`
 	Title     string `db:"title"`
 	Text      string `db:"text"`
+}
+
+func nilOnZero(i int) *int {
+	if i == 0 {
+		return nil
+	}
+	return &i
+}
+
+func zeroOnNil(i *int) int {
+	if i == nil {
+		return 0
+	}
+	return *i
 }
 
 func convertBlockToDB(botUUID string, b bots.Block) blockRow {
@@ -382,7 +396,7 @@ func convertBlockToDB(botUUID string, b bots.Block) blockRow {
 		BotUUID:   botUUID,
 		Type:      b.Type.String(),
 		State:     b.State,
-		NextState: b.NextState,
+		NextState: nilOnZero(b.NextState),
 		Title:     b.Title,
 		Text:      b.Text,
 	}
@@ -397,7 +411,7 @@ func convertBlocksToDB(botUUID string, bs []bots.Block) []blockRow {
 }
 
 func convertBlockToDomain(b blockRow, options []bots.Option) (bots.Block, error) {
-	return bots.UnmarshallBlockFromDB(b.Type, b.State, b.NextState, options, b.Title, b.Text)
+	return bots.UnmarshallBlockFromDB(b.Type, b.State, zeroOnNil(b.NextState), options, b.Title, b.Text)
 }
 
 type botRow struct {

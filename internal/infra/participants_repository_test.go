@@ -109,8 +109,8 @@ func setupDBParticipants(ctx context.Context, db *sqlx.DB) error {
 			VALUES 
 				($1, $2, $3, $4, $5, $6),
 				($7, $8, $9, $10, $11, $12)`,
-			randomBotUUID, 1, "question", 0, "Question 1", "Some text",
-			randomBotUUID, 2, "question", 0, "Question 2", "Some text",
+			randomBotUUID, 1, "question", nil, "Question 1", "Some text",
+			randomBotUUID, 2, "question", nil, "Question 2", "Some text",
 		)
 		if err != nil {
 			return err

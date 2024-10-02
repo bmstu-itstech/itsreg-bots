@@ -4,10 +4,10 @@ info:
   description: "ITS Reg"
   version: 1.0.0
 servers:
-  - url: 'http://{hostname}/api'
+  - url: 'http://{hostname}:8400/api'
     variables:
       hostname:
-        default: localhost:8400
+        default: localhost
 security:
   - bearerAuth: []
 
