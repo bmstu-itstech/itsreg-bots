@@ -266,7 +266,7 @@ type optionRow struct {
 	BotUUID string `db:"bot_uuid"`
 	State   int    `db:"state"`
 	Text    string `db:"text"`
-	Next    int    `db:"next"`
+	Next    *int   `db:"next"`
 }
 
 func convertOptionToDB(botUUID string, state int, o bots.Option) optionRow {
@@ -274,7 +274,7 @@ func convertOptionToDB(botUUID string, state int, o bots.Option) optionRow {
 		BotUUID: botUUID,
 		State:   state,
 		Text:    o.Text,
-		Next:    o.Next,
+		Next:    nilOnZero(o.Next),
 	}
 }
 
@@ -289,7 +289,7 @@ func convertOptionsToDB(botUUID string, state int, os []bots.Option) []optionRow
 func convertOptionsToDomain(os []optionRow) ([]bots.Option, error) {
 	res := make([]bots.Option, len(os))
 	for i, o := range os {
-		option, err := bots.NewOption(o.Text, o.Next)
+		option, err := bots.NewOption(o.Text, zeroOnNil(o.Next))
 		if err != nil {
 			return nil, err
 		}
@@ -336,7 +336,7 @@ type mailingRow struct {
 	BotUUID       string `db:"bot_uuid"`
 	Name          string `db:"name"`
 	EntryKey      string `db:"entry_key"`
-	RequiredState int    `db:"required_state"`
+	RequiredState *int   `db:"required_state"`
 }
 
 func convertMailingToDB(botUUID string, m bots.Mailing) mailingRow {
@@ -344,7 +344,7 @@ func convertMailingToDB(botUUID string, m bots.Mailing) mailingRow {
 		BotUUID:       botUUID,
 		Name:          m.Name,
 		EntryKey:      m.EntryKey,
-		RequiredState: m.RequireState,
+		RequiredState: nilOnZero(m.RequireState),
 	}
 }
 
@@ -359,7 +359,7 @@ func convertMailingsToDB(botUUID string, ms []bots.Mailing) []mailingRow {
 func convertMailingsToDomain(ms []mailingRow) ([]bots.Mailing, error) {
 	res := make([]bots.Mailing, len(ms))
 	for i, m := range ms {
-		mailing, err := bots.NewMailing(m.Name, m.EntryKey, m.RequiredState)
+		mailing, err := bots.NewMailing(m.Name, m.EntryKey, zeroOnNil(m.RequiredState))
 		if err != nil {
 			return nil, err
 		}
