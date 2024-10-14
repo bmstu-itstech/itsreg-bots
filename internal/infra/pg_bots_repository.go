@@ -73,8 +73,8 @@ func (r *pgBotsRepository) UpdateOrCreate(ctx context.Context, bot *bots.Bot) er
 		if len(bot.Mailings()) > 0 {
 			if err = r.checkExecRes(tx.NamedExecContext(ctx,
 				`INSERT INTO mailings 
-				(bot_uuid, name, entry_key, required_state) 
-			 VALUES (:bot_uuid, :name, :entry_key, :required_state)`,
+					(bot_uuid, name, entry_key, required_state) 
+			 	VALUES (:bot_uuid, :name, :entry_key, :required_state)`,
 				convertMailingsToDB(bot.UUID, bot.Mailings()),
 			)); err != nil {
 				return err

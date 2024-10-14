@@ -68,12 +68,9 @@ func selectParticipants(
 ) ([]*bots.Participant, error) {
 	var rows []participantRow
 	err := pgutils.Select(ctx, q, &rows,
-		`SELECT
-			bot_uuid, user_id, state
-		FROM
-			participants
-		WHERE 
-			bot_uuid = $1`, botUUID,
+		`SELECT bot_uuid, user_id, state
+		 FROM   participants
+		 WHERE  bot_uuid = $1`, botUUID,
 	)
 	if err != nil {
 		return nil, err
@@ -85,7 +82,7 @@ func selectParticipants(
 		if err != nil {
 			return nil, err
 		}
-		prt, err := bots.UnmarshallParticipantFromDB(row.BotUUID, row.UserID, row.State, answers)
+		prt, err := mapParticipantFromDB(row, answers)
 		if err != nil {
 			return nil, err
 		}
@@ -100,12 +97,9 @@ func selectParticipant(
 ) (*bots.Participant, error) {
 	var row participantRow
 	err := pgutils.Get(ctx, q, &row,
-		`SELECT 
-			bot_uuid, user_id, state
-		FROM 
-			participants 
-		WHERE 
-			bot_uuid = $1 AND user_id = $2`,
+		`SELECT bot_uuid, user_id, state
+		 FROM   participants 
+		 WHERE  bot_uuid = $1 AND user_id = $2`,
 		botUUID, userID,
 	)
 	if err != nil {
@@ -117,18 +111,17 @@ func selectParticipant(
 		return nil, err
 	}
 
-	return bots.UnmarshallParticipantFromDB(row.BotUUID, row.UserID, row.State, answers)
+	return mapParticipantFromDB(row, answers)
 }
 
-func upsertParticipant(ctx context.Context, ex sqlx.ExecerContext, prt *bots.Participant) error {
-	res, err := pgutils.Exec(ctx, ex,
-		`INSERT INTO
-			participants (bot_uuid, user_id, state)
-		VALUES 
-			($1, $2, $3)
-		ON CONFLICT ( bot_uuid, user_id )
+func upsertParticipant(ctx context.Context, ex sqlx.ExtContext, prt *bots.Participant) error {
+	res, err := sqlx.NamedExecContext(ctx, ex,
+		`INSERT INTO participants 
+			(bot_uuid, user_id, state)
+		 VALUES (:bot_uuid, :user_id, :state)
+		 ON CONFLICT ( bot_uuid, user_id )
 			DO UPDATE SET state = EXCLUDED.state`,
-		prt.BotUUID, prt.UserID, prt.State,
+		mapParticipantToDB(prt),
 	)
 	if err != nil {
 		return err
@@ -141,12 +134,10 @@ func selectAnswers(
 	ctx context.Context, q sqlx.QueryerContext, botUUID string, userID int64,
 ) ([]bots.Answer, error) {
 	var rows []answerRow
-	err := pgutils.Select(ctx, q, &rows,
-		`SELECT
-			state, text
-		FROM 
-			answers
-		WHERE bot_uuid = $1 AND user_id = $2`,
+	err := sqlx.SelectContext(ctx, q, &rows,
+		`SELECT bot_uuid, user_id, state, text
+	     FROM   answers
+		 WHERE  bot_uuid = $1 AND user_id = $2`,
 		botUUID, userID,
 	)
 	if err != nil {
@@ -156,15 +147,14 @@ func selectAnswers(
 	return mapAnswersFromDB(rows)
 }
 
-func upsertAnswer(ctx context.Context, ex sqlx.ExecerContext, botUUID string, userID int64, ans bots.Answer) error {
-	res, err := pgutils.Exec(ctx, ex,
-		`INSERT INTO
-			answers (bot_uuid, user_id, state, text)
-		VALUES
-			($1, $2, $3, $4)
-		ON CONFLICT ( bot_uuid, user_id, state )
+func upsertAnswer(ctx context.Context, ex sqlx.ExtContext, botUUID string, userID int64, ans bots.Answer) error {
+	res, err := sqlx.NamedExecContext(ctx, ex,
+		`INSERT INTO answers 
+			(bot_uuid, user_id, state, text)
+		 VALUES (:bot_uuid, :user_id, :state, :text)
+		 ON CONFLICT ( bot_uuid, user_id, state )
 			DO UPDATE SET text = EXCLUDED.text`,
-		botUUID, userID, ans.State, ans.Text,
+		mapAnswerToDB(botUUID, userID, ans),
 	)
 	if err != nil {
 		return err
@@ -198,13 +188,41 @@ func checkInsertResult(res sql.Result) error {
 	return nil
 }
 
+func mapParticipantToDB(prt *bots.Participant) participantRow {
+	return participantRow{
+		BotUUID: prt.BotUUID,
+		UserID:  prt.UserID,
+		State:   nilOnZero(prt.State),
+	}
+}
+
+func mapParticipantFromDB(row participantRow, as []bots.Answer) (*bots.Participant, error) {
+	return bots.UnmarshallParticipantFromDB(
+		row.BotUUID,
+		row.UserID,
+		zeroOnNil(row.State),
+		as,
+	)
+}
+
 type participantRow struct {
 	BotUUID string `db:"bot_uuid"`
 	UserID  int64  `db:"user_id"`
-	State   int    `db:"state"`
+	State   *int   `db:"state"`
+}
+
+func mapAnswerToDB(botUUID string, userID int64, a bots.Answer) answerRow {
+	return answerRow{
+		BotUUID: botUUID,
+		UserID:  userID,
+		State:   a.State,
+		Text:    a.Text,
+	}
 }
 
 type answerRow struct {
-	State int    `db:"state"`
-	Text  string `db:"text"`
+	BotUUID string `db:"bot_uuid"`
+	UserID  int64  `db:"user_id"`
+	State   int    `db:"state"`
+	Text    string `db:"text"`
 }
