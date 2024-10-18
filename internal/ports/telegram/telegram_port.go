@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -54,6 +53,12 @@ func RunTelegramPort(
 		wg.Done()
 	}()
 
+	wg.Add(1)
+	go func() {
+		p.startAlreadyStartedBots()
+		wg.Done()
+	}()
+
 	wg.Wait()
 }
 
@@ -77,20 +82,21 @@ func (p *Port) handleRunnerMessage(ctx context.Context, msg runnerMessage) error
 	return fmt.Errorf("invalid command: %s", msg.Command)
 }
 
-func (p *Port) startAlreadyStartedBots(ctx context.Context) error {
+func (p *Port) startAlreadyStartedBots() {
+	ctx := context.Background()
+
 	bots, err := p.app.Queries.StartedBots.Handle(ctx, query.GetStartedBots{})
 	if err != nil {
-		return err
+		p.log.Error("failed to get started bots", "err", err.Error())
+		return
 	}
 
 	for _, bot := range bots {
-		errStart := p.startBot(ctx, bot.UUID)
-		if errStart != nil {
-			err = errors.Join(err, errStart)
+		err = p.startBot(ctx, bot.UUID)
+		if err != nil {
+			p.log.Error("failed to start bot", "err", err.Error())
 		}
 	}
-
-	return err
 }
 
 func (p *Port) startBot(ctx context.Context, botUUID string) error {

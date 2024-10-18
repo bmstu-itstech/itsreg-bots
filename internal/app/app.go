@@ -12,6 +12,7 @@ type Application struct {
 
 type Commands struct {
 	CreateBot    command.CreateBotHandler
+	DeleteBot    command.DeleteBotHandler
 	StartBot     command.StartBotHandler
 	StopBot      command.StopBotHandler
 	UpdateStatus command.UpdateStatusHandler

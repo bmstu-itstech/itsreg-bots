@@ -78,6 +78,7 @@ func newApplication(
 	return &app.Application{
 		Commands: app.Commands{
 			CreateBot:    command.NewCreateBotHandler(bots, logger, metricsClient),
+			DeleteBot:    command.NewDeleteBotHandler(bots, runPub, logger, metricsClient),
 			StartBot:     command.NewStartBotHandler(bots, runPub, logger, metricsClient),
 			StopBot:      command.NewStopBotHandler(bots, runPub, logger, metricsClient),
 			UpdateStatus: command.NewUpdateStatusHandler(bots, logger, metricsClient),

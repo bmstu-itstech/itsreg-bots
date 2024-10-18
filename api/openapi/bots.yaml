@@ -86,6 +86,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    delete:
+      operationId: deleteBot
+      description: "Удаляет бота с заданным UUID."
+      parameters:
+        - in: path
+          name: uuid
+          schema:
+            type: string
+            example: 14ab-d740
+          required: true
+          description: "Уникальный UUID бота."
+      responses:
+        200:
+          description: "Бот успешно удалён."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bot'
+        401:
+          description: "Не был указан JWT токен."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: "Нет доступа к боту с данным UUID."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: "Бот с данным UUID не найден."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /bots/{uuid}/answers:
     get:

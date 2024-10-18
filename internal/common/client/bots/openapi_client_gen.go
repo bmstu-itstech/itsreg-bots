@@ -97,6 +97,9 @@ type ClientInterface interface {
 
 	CreateBot(ctx context.Context, body CreateBotJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteBot request
+	DeleteBot(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetBot request
 	GetBot(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -139,6 +142,18 @@ func (c *Client) CreateBotWithBody(ctx context.Context, contentType string, body
 
 func (c *Client) CreateBot(ctx context.Context, body CreateBotJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateBotRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteBot(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteBotRequest(c.Server, uuid)
 	if err != nil {
 		return nil, err
 	}
@@ -272,6 +287,40 @@ func NewCreateBotRequestWithBody(server string, contentType string, body io.Read
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteBotRequest generates requests for DeleteBot
+func NewDeleteBotRequest(server string, uuid string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "uuid", runtime.ParamLocationPath, uuid)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/bots/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -504,6 +553,9 @@ type ClientWithResponsesInterface interface {
 
 	CreateBotWithResponse(ctx context.Context, body CreateBotJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateBotResponse, error)
 
+	// DeleteBotWithResponse request
+	DeleteBotWithResponse(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*DeleteBotResponse, error)
+
 	// GetBotWithResponse request
 	GetBotWithResponse(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*GetBotResponse, error)
 
@@ -559,6 +611,31 @@ func (r CreateBotResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r CreateBotResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteBotResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *Bot
+	JSON401      *Error
+	JSON403      *Error
+	JSON404      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteBotResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteBotResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -712,6 +789,15 @@ func (c *ClientWithResponses) CreateBotWithResponse(ctx context.Context, body Cr
 	return ParseCreateBotResponse(rsp)
 }
 
+// DeleteBotWithResponse request returning *DeleteBotResponse
+func (c *ClientWithResponses) DeleteBotWithResponse(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*DeleteBotResponse, error) {
+	rsp, err := c.DeleteBot(ctx, uuid, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteBotResponse(rsp)
+}
+
 // GetBotWithResponse request returning *GetBotResponse
 func (c *ClientWithResponses) GetBotWithResponse(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*GetBotResponse, error) {
 	rsp, err := c.GetBot(ctx, uuid, reqEditors...)
@@ -810,6 +896,53 @@ func ParseCreateBotResponse(rsp *http.Response) (*CreateBotResponse, error) {
 			return nil, err
 		}
 		response.JSON401 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteBotResponse parses an HTTP response from a DeleteBotWithResponse call
+func ParseDeleteBotResponse(rsp *http.Response) (*DeleteBotResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteBotResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Bot
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 

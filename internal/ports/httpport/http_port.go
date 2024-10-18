@@ -64,6 +64,31 @@ func (s Server) CreateBot(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
+func (s Server) DeleteBot(w http.ResponseWriter, r *http.Request, botUUID string) {
+	userUUID, err := jwtauth.UserUUIDFromContext(r.Context())
+	if err != nil {
+		httpError(w, r, err, http.StatusUnauthorized)
+		return
+	}
+
+	err = s.app.Commands.DeleteBot.Handle(r.Context(), command.DeleteBot{
+		AuthorUUID: userUUID,
+		BotUUID:    botUUID,
+	})
+	if errors.As(err, &bots.BotNotFoundError{}) {
+		httpError(w, r, err, http.StatusNotFound)
+		return
+	}
+	if errors.Is(err, bots.ErrPermissionDenied) {
+		httpError(w, r, err, http.StatusForbidden)
+		return
+	}
+	if err != nil {
+		httpError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+}
+
 func (s Server) GetBots(w http.ResponseWriter, r *http.Request) {
 	userUUID, err := jwtauth.UserUUIDFromContext(r.Context())
 	if err != nil {
@@ -292,12 +317,12 @@ func convertMailingToAPI(mailing types.Mailing) Mailing {
 	}
 }
 
-func convertMailingsToAPI(mailings []types.Mailing) []Mailing {
+func convertOptionalMailingsToAPI(mailings []types.Mailing) *[]Mailing {
 	res := make([]Mailing, len(mailings))
 	for i, mailing := range mailings {
 		res[i] = convertMailingToAPI(mailing)
 	}
-	return res
+	return &res
 }
 
 func convertMailingFromAPI(mailing Mailing) types.Mailing {
@@ -368,6 +393,7 @@ func convertBotToAPI(bot types.Bot) Bot {
 		BotUUID:   bot.UUID,
 		CreatedAt: bot.CreatedAt,
 		Entries:   convertEntryPointsToAPI(bot.Entries),
+		Mailings:  convertOptionalMailingsToAPI(bot.Mailings),
 		Name:      bot.Name,
 		Status:    BotStatus(bot.Status),
 		Token:     bot.Token,

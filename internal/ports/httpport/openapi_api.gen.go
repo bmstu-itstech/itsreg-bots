@@ -21,6 +21,9 @@ type ServerInterface interface {
 	// (PUT /bots)
 	CreateBot(w http.ResponseWriter, r *http.Request)
 
+	// (DELETE /bots/{uuid})
+	DeleteBot(w http.ResponseWriter, r *http.Request, uuid string)
+
 	// (GET /bots/{uuid})
 	GetBot(w http.ResponseWriter, r *http.Request, uuid string)
 
@@ -48,6 +51,11 @@ func (_ Unimplemented) GetBots(w http.ResponseWriter, r *http.Request) {
 
 // (PUT /bots)
 func (_ Unimplemented) CreateBot(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (DELETE /bots/{uuid})
+func (_ Unimplemented) DeleteBot(w http.ResponseWriter, r *http.Request, uuid string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -110,6 +118,34 @@ func (siw *ServerInterfaceWrapper) CreateBot(w http.ResponseWriter, r *http.Requ
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateBot(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// DeleteBot operation middleware
+func (siw *ServerInterfaceWrapper) DeleteBot(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "uuid" -------------
+	var uuid string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "uuid", chi.URLParam(r, "uuid"), &uuid, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "uuid", Err: err})
+		return
+	}
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteBot(w, r, uuid)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -386,6 +422,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/bots", wrapper.CreateBot)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/bots/{uuid}", wrapper.DeleteBot)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/bots/{uuid}", wrapper.GetBot)
