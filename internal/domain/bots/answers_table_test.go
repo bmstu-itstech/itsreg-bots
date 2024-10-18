@@ -26,7 +26,7 @@ func TestNewTable(t *testing.T) {
 		}
 		botUUID := uuid.NewString()
 		userUUID := uuid.NewString()
-		bot := bots.MustNewBot(botUUID, userUUID, entries, nil, blocks, "Test bot", "xxx-yyy")
+		bot := bots.MustNewBot(botUUID, userUUID, entries, nil, blocks, "Test bot", "12345678:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
 		ivan := bots.MustNewParticipant(botUUID, 10)
 		ivan.SwitchTo(1)

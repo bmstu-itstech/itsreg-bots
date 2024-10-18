@@ -3,6 +3,7 @@ package bots
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/bmstu-itstech/itsreg-bots/internal/common/commonerrs"
@@ -62,6 +63,10 @@ func NewBot(
 
 	if token == "" {
 		return nil, commonerrs.NewInvalidInputError("expected not empty token")
+	}
+
+	if !regexp.MustCompile("[0-9]{8,10}:[a-zA-Z0-9_-]{35}").MatchString(token) {
+		return nil, commonerrs.NewInvalidInputError("invalid token")
 	}
 
 	for _, entry := range entries {

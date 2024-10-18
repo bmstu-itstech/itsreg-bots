@@ -45,7 +45,7 @@ func TestBot_Process(t *testing.T) {
 	}
 	botUUID := uuid.NewString()
 	userUUID := uuid.NewString()
-	bot := bots.MustNewBot(botUUID, userUUID, entries, nil, blocks, "Test bot", "random token")
+	bot := bots.MustNewBot(botUUID, userUUID, entries, nil, blocks, "Test bot", "12345678:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
 	t.Run("should entry bot", func(t *testing.T) {
 		userID := rand.Int64()
