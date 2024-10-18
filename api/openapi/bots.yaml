@@ -23,9 +23,9 @@ paths:
             schema:
               $ref: '#/components/schemas/PostBots'
       responses:
-        201:
+        "201":
           description: "Бот успешно создан."
-        401:
+        "401":
           description: "Не был указан JWT токен."
           content:
             application/json:
@@ -36,13 +36,13 @@ paths:
       operationId: getBots
       description: "Получить информацию о ботах."
       responses:
-        200:
+        "200":
           description: "Успешно получена информация о ботах."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetBots'
-        401:
+        "401":
           description: "Не был указан JWT токен."
           content:
             application/json:
@@ -62,25 +62,25 @@ paths:
           required: true
           description: "Уникальный UUID бота."
       responses:
-        200:
+        "200":
           description: "Бот найден."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Bot'
-        401:
+        "401":
           description: "Не был указан JWT токен."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        403:
+        "403":
           description: "Нет доступа к боту с данным UUID."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        "404":
           description: "Бот с данным UUID не найден."
           content:
             application/json:
@@ -98,21 +98,21 @@ paths:
           required: true
           description: "Уникальный UUID бота."
       responses:
-        200:
+        "200":
           description: "Бот успешно удалён."
-        401:
+        "401":
           description: "Не был указан JWT токен."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        403:
+        "403":
           description: "Нет доступа к боту с данным UUID."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        "404":
           description: "Бот с данным UUID не найден."
           content:
             application/json:
@@ -132,23 +132,23 @@ paths:
           required: true
           description: "Уникальный UUID бота."
       responses:
-        200:
+        "200":
           description: "Успешно получены ответы участников."
           content:
             text/csv: { }
-        401:
+        "401":
           description: "Не был указан JWT токен."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        403:
+        "403":
           description: "Нет доступа к боту с данным UUID."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        "404":
           description: "Бот с данным UUID не найден."
           content:
             application/json:
@@ -168,21 +168,21 @@ paths:
           required: true
           description: "Уникальный UUID бота."
       responses:
-        200:
+        "200":
           description: "Успешно отправлен запрос на запуск бота."
-        401:
+        "401":
           description: "Не был указан JWT токен."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        403:
+        "403":
           description: "Нет доступа к боту с данным UUID."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        "404":
           description: "Бот с данным UUID не найден."
           content:
             application/json:
@@ -203,21 +203,21 @@ paths:
           required: true
           description: "Уникальный UUID бота."
       responses:
-        200:
+        "200":
           description: "Успешно отправлен запрос на остановку бота."
-        401:
+        "401":
           description: "Не был указан JWT токен."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        403:
+        "403":
           description: "Нет доступа к боту с данным UUID."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        "404":
           description: "Бот с данным UUID не найден."
           content:
             application/json:
@@ -244,21 +244,21 @@ paths:
           required: true
           description: "Уникальный ключ рассылки бота."
       responses:
-        200:
+        "200":
           description: "TODO"
-        401:
+        "401":
           description: "Не был указан JWT токен."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        403:
+        "403":
           description: "Нет доступа к боту с данным UUID."
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-        404:
+        "404":
           description: "Бот с данным UUID или рассылка с ключом не найдены."
           content:
             application/json:
