@@ -86,9 +86,10 @@ func newApplication(
 			StartMailing: command.NewStartMailingHandler(bots, participants, msgPub, logger, metricsClient),
 		},
 		Queries: app.Queries{
-			AllAnswers: query.NewGetAnswersTableHandler(bots, participants, logger, metricsClient),
-			GetBot:     query.NewGetBotHandler(bots, logger, metricsClient),
-			GetBots:    query.NewGetBotsHandler(bots, logger, metricsClient),
+			AllAnswers:  query.NewGetAnswersTableHandler(bots, participants, logger, metricsClient),
+			GetBot:      query.NewGetBotHandler(bots, logger, metricsClient),
+			GetBots:     query.NewGetBotsHandler(bots, logger, metricsClient),
+			StartedBots: query.NewGetStartedBotsHandler(bots, logger, metricsClient),
 		},
 	}
 }

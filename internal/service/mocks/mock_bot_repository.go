@@ -69,12 +69,29 @@ func (r *mockBotRepository) UserBots(_ context.Context, userUUID string) ([]*bot
 	r.RLock()
 	defer r.RUnlock()
 
+	return r.botsFilter(func(bot *bots.Bot) bool {
+		return bot.OwnerUUID == userUUID
+	}), nil
+
+}
+
+func (r *mockBotRepository) BotsWithStatus(_ context.Context, status bots.Status) ([]*bots.Bot, error) {
+	r.RLock()
+	defer r.RUnlock()
+
+	return r.botsFilter(func(bot *bots.Bot) bool {
+		return bot.Status == status
+	}), nil
+}
+
+type botPredicate func(bot *bots.Bot) bool
+
+func (r *mockBotRepository) botsFilter(predicate botPredicate) []*bots.Bot {
 	res := make([]*bots.Bot, 0)
 	for _, b := range r.m {
-		if b.OwnerUUID == userUUID {
+		if predicate(&b) {
 			res = append(res, &b)
 		}
 	}
-
-	return res, nil
+	return res
 }

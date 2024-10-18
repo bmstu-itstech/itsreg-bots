@@ -20,4 +20,5 @@ type Repository interface {
 
 	Bot(ctx context.Context, uuid string) (*Bot, error)
 	UserBots(ctx context.Context, userUUID string) ([]*Bot, error)
+	BotsWithStatus(ctx context.Context, status Status) ([]*Bot, error)
 }

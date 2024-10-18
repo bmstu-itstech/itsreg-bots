@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -9,6 +10,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 
 	"github.com/bmstu-itstech/itsreg-bots/internal/app"
+	"github.com/bmstu-itstech/itsreg-bots/internal/app/query"
 	"github.com/bmstu-itstech/itsreg-bots/internal/common/logs"
 )
 
@@ -73,6 +75,22 @@ func (p *Port) handleRunnerMessage(ctx context.Context, msg runnerMessage) error
 		return p.stopBot(ctx, msg.BotUUID)
 	}
 	return fmt.Errorf("invalid command: %s", msg.Command)
+}
+
+func (p *Port) startAlreadyStartedBots(ctx context.Context) error {
+	bots, err := p.app.Queries.StartedBots.Handle(ctx, query.GetStartedBots{})
+	if err != nil {
+		return err
+	}
+
+	for _, bot := range bots {
+		errStart := p.startBot(ctx, bot.UUID)
+		if errStart != nil {
+			err = errors.Join(err, errStart)
+		}
+	}
+
+	return err
 }
 
 func (p *Port) startBot(ctx context.Context, botUUID string) error {

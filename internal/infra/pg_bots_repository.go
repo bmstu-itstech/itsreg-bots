@@ -179,6 +179,48 @@ func (r *pgBotsRepository) UserBots(ctx context.Context, userUUID string) ([]*bo
 	return res, nil
 }
 
+func (r *pgBotsRepository) BotsWithStatus(ctx context.Context, status bots.Status) ([]*bots.Bot, error) {
+	var bRows []botRow
+	if err := pgutils.Select(ctx, r.db, &bRows,
+		`SELECT uuid, name, token, status, created_at, updated_at, owner_uuid
+         FROM   bots 
+		 WHERE  status = $1`, status.String(),
+	); err != nil {
+		return nil, err
+	}
+
+	res := make([]*bots.Bot, 0, len(bRows))
+	for _, bRow := range bRows {
+		entryPoints, err := r.selectEntryPoints(ctx, bRow.UUID)
+		if err != nil {
+			return nil, err
+		}
+
+		mailings, err := r.selectMailings(ctx, bRow.UUID)
+		if err != nil {
+			return nil, err
+		}
+
+		blocks, err := r.selectBlocks(ctx, bRow.UUID)
+		if err != nil {
+			return nil, err
+		}
+
+		bot, err := bots.UnmarshallBotFromDB(
+			bRow.UUID, bRow.OwnerUUID, entryPoints, mailings, blocks,
+			bRow.Name, bRow.Token, bRow.Status,
+			bRow.CreatedAt.Local(), bRow.UpdatedAt.Local(),
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, bot)
+	}
+
+	return res, nil
+}
+
 func (r *pgBotsRepository) selectEntryPoints(ctx context.Context, uuid string) ([]bots.EntryPoint, error) {
 	var eRows []entryPointRow
 	if err := pgutils.Select(ctx, r.db, &eRows,

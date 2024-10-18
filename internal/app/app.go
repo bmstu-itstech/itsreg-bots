@@ -21,7 +21,8 @@ type Commands struct {
 }
 
 type Queries struct {
-	AllAnswers query.GetAnswersTableHandler
-	GetBot     query.GetBotHandler
-	GetBots    query.GetBotsHandler
+	AllAnswers  query.GetAnswersTableHandler
+	GetBot      query.GetBotHandler
+	GetBots     query.GetBotsHandler
+	StartedBots query.GetStartedBotsHandler
 }
