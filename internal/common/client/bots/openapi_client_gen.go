@@ -620,7 +620,6 @@ func (r CreateBotResponse) StatusCode() int {
 type DeleteBotResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *Bot
 	JSON401      *Error
 	JSON403      *Error
 	JSON404      *Error
@@ -916,13 +915,6 @@ func ParseDeleteBotResponse(rsp *http.Response) (*DeleteBotResponse, error) {
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest Bot
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {

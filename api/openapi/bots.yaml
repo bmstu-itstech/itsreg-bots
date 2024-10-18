@@ -100,10 +100,6 @@ paths:
       responses:
         200:
           description: "Бот успешно удалён."
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Bot'
         401:
           description: "Не был указан JWT токен."
           content:
