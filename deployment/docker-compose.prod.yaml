@@ -48,7 +48,7 @@ services:
       start_period: 10s
       timeout: 10s
     volumes:
-      - ~/.docker/itsreg/postgres/data:/data
+      - ~/.docker/itsreg/postgres/data:/var/lib/postgresql/data
     networks:
       ir-web-bots:
         aliases:
