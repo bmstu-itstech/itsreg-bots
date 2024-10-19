@@ -30,6 +30,9 @@ type ServerInterface interface {
 	// (GET /bots/{uuid}/answers)
 	GetAnswers(w http.ResponseWriter, r *http.Request, uuid string)
 
+	// (POST /bots/{uuid}/mailings)
+	CreateMailing(w http.ResponseWriter, r *http.Request, uuid string)
+
 	// (POST /bots/{uuid}/mailings/{entryKey}/start)
 	StartMailing(w http.ResponseWriter, r *http.Request, uuid string, entryKey string)
 
@@ -66,6 +69,11 @@ func (_ Unimplemented) GetBot(w http.ResponseWriter, r *http.Request, uuid strin
 
 // (GET /bots/{uuid}/answers)
 func (_ Unimplemented) GetAnswers(w http.ResponseWriter, r *http.Request, uuid string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// (POST /bots/{uuid}/mailings)
+func (_ Unimplemented) CreateMailing(w http.ResponseWriter, r *http.Request, uuid string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -202,6 +210,34 @@ func (siw *ServerInterfaceWrapper) GetAnswers(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAnswers(w, r, uuid)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// CreateMailing operation middleware
+func (siw *ServerInterfaceWrapper) CreateMailing(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "uuid" -------------
+	var uuid string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "uuid", chi.URLParam(r, "uuid"), &uuid, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "uuid", Err: err})
+		return
+	}
+
+	ctx = context.WithValue(ctx, BearerAuthScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CreateMailing(w, r, uuid)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -431,6 +467,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/bots/{uuid}/answers", wrapper.GetAnswers)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/bots/{uuid}/mailings", wrapper.CreateMailing)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/bots/{uuid}/mailings/{entryKey}/start", wrapper.StartMailing)

@@ -57,13 +57,13 @@ func testBotsRepository(t *testing.T, repos bots.Repository) {
 
 		ctx := context.Background()
 
-		botUUID := gofakeit.UUID()
-		bot := createBot(botUUID)
+		ownerUUID := gofakeit.UUID()
+		bot := createBot(ownerUUID)
 
 		err := repos.UpdateOrCreate(ctx, bot)
 		require.NoError(t, err)
 
-		newBot := createBot(botUUID)
+		newBot := createBot(bot.UUID)
 		err = repos.UpdateOrCreate(ctx, newBot)
 		require.NoError(t, err)
 
@@ -71,6 +71,50 @@ func testBotsRepository(t *testing.T, repos bots.Repository) {
 		require.NoError(t, err)
 		require.NotNil(t, got)
 		requireBot(t, *bot, *got)
+	})
+
+	t.Run("should update bot name", func(t *testing.T) {
+		t.Parallel()
+
+		ctx := context.Background()
+
+		botUUID := gofakeit.UUID()
+		bot := createBot(botUUID)
+		require.NoError(t, repos.UpdateOrCreate(ctx, bot))
+
+		require.NoError(t, repos.Update(ctx, bot.UUID, func(innerCtx context.Context, bot *bots.Bot) error {
+			bot.Name = "New name"
+			return nil
+		}))
+
+		got, err := repos.Bot(ctx, bot.UUID)
+		require.NoError(t, err)
+		require.Equal(t, got.Name, "New name")
+	})
+
+	t.Run("should add mailing", func(t *testing.T) {
+		t.Parallel()
+
+		ctx := context.Background()
+
+		botUUID := gofakeit.UUID()
+		bot := createBot(botUUID)
+		require.NoError(t, repos.UpdateOrCreate(ctx, bot))
+
+		mailingName := "Mailing 1"
+		requiredState := 0
+		entryPoint := bots.MustNewEntryPoint("mailing_1", 100)
+		mailingBlocks := []bots.Block{
+			bots.MustNewMessageBlock(100, 0, "Mailing", "Mailing text"),
+		}
+
+		require.NoError(t, repos.Update(ctx, bot.UUID, func(innerCtx context.Context, bot *bots.Bot) error {
+			return bot.AddMailing(mailingName, requiredState, entryPoint, mailingBlocks)
+		}))
+
+		got, err := repos.Bot(ctx, bot.UUID)
+		require.NoError(t, err)
+		require.Len(t, got.Mailings(), 2)
 	})
 
 	t.Run("should return error if bot not found", func(t *testing.T) {
@@ -155,10 +199,10 @@ func createBot(ownerUUID string) *bots.Bot {
 		ownerUUID,
 		[]bots.EntryPoint{
 			bots.MustNewEntryPoint("start", 1),
-			bots.MustNewEntryPoint("mailing-1", 1),
+			bots.MustNewEntryPoint("mailing_0", 1),
 		},
 		[]bots.Mailing{
-			bots.MustNewMailing("example", "mailing-1", 0),
+			bots.MustNewMailing("Mailing 0", "mailing_0", 0),
 		},
 		[]bots.Block{
 			bots.MustNewSelectionBlock(1, 2, []bots.Option{
@@ -173,7 +217,7 @@ func createBot(ownerUUID string) *bots.Bot {
 			bots.MustNewQuestionBlock(4, 0, "Question 4", "Some question"),
 		},
 		gofakeit.Name(),
-		gofakeit.UUID(),
+		"12345678:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
 	)
 }
 

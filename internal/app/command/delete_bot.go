@@ -42,8 +42,8 @@ func (h deleteBotHandler) Handle(ctx context.Context, cmd DeleteBot) error {
 		return err
 	}
 
-	if bot.OwnerUUID != cmd.AuthorUUID {
-		return bots.ErrPermissionDenied
+	if err = bot.CanSeeBot(cmd.AuthorUUID); err != nil {
+		return err
 	}
 
 	err = h.runPub.PublishStop(ctx, bot.UUID)

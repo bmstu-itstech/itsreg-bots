@@ -26,15 +26,15 @@ func NewHTTPServer(app *app.Application) *Server {
 }
 
 func (s Server) CreateBot(w http.ResponseWriter, r *http.Request) {
-	postBots := PostBots{}
-	if err := render.Decode(r, &postBots); err != nil {
-		httpError(w, r, err, http.StatusBadRequest)
-		return
-	}
-
 	userUUID, err := jwtauth.UserUUIDFromContext(r.Context())
 	if err != nil {
 		httpError(w, r, err, http.StatusUnauthorized)
+		return
+	}
+
+	postBots := PostBots{}
+	if err := render.Decode(r, &postBots); err != nil {
+		httpError(w, r, err, http.StatusBadRequest)
 		return
 	}
 
@@ -75,6 +75,45 @@ func (s Server) DeleteBot(w http.ResponseWriter, r *http.Request, botUUID string
 		AuthorUUID: userUUID,
 		BotUUID:    botUUID,
 	})
+	if errors.As(err, &bots.BotNotFoundError{}) {
+		httpError(w, r, err, http.StatusNotFound)
+		return
+	}
+	if errors.Is(err, bots.ErrPermissionDenied) {
+		httpError(w, r, err, http.StatusForbidden)
+		return
+	}
+	if err != nil {
+		httpError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+}
+
+func (s Server) CreateMailing(w http.ResponseWriter, r *http.Request, botUUID string) {
+	userUUID, err := jwtauth.UserUUIDFromContext(r.Context())
+	if err != nil {
+		httpError(w, r, err, http.StatusUnauthorized)
+		return
+	}
+
+	createMailing := CreateMailing{}
+	if err := render.Decode(r, &createMailing); err != nil {
+		httpError(w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	err = s.app.Commands.CreateMailing.Handle(r.Context(), command.CreateMailing{
+		AuthorUUID:    userUUID,
+		BotUUID:       botUUID,
+		MailingName:   createMailing.Name,
+		RequiredState: createMailing.RequiredState,
+		EntryPoint:    convertEntryPointFromAPI(createMailing.EntryPoint),
+		Blocks:        convertBlocksFromAPI(createMailing.Blocks),
+	})
+	if errors.As(err, &commonerrs.InvalidInputError{}) {
+		httpError(w, r, err, http.StatusBadRequest)
+		return
+	}
 	if errors.As(err, &bots.BotNotFoundError{}) {
 		httpError(w, r, err, http.StatusNotFound)
 		return

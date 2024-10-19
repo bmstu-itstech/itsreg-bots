@@ -7,9 +7,14 @@ import (
 	"time"
 
 	"github.com/bmstu-itstech/itsreg-bots/internal/common/commonerrs"
+	"github.com/bmstu-itstech/itsreg-bots/pkg/funcs/maps"
 )
 
 const startEntryKey = "start"
+
+var errBlockIsEmpty = commonerrs.NewInvalidInputErrorf("expectec not empty block")
+var errEntryPointIsEmpty = commonerrs.NewInvalidInputErrorf("expectec not empty entry point")
+var errMailingIsEmpty = commonerrs.NewInvalidInputErrorf("expectec not empty mailing")
 
 type Bot struct {
 	UUID string
@@ -71,7 +76,7 @@ func NewBot(
 
 	for _, entry := range entries {
 		if entry.IsZero() {
-			return nil, commonerrs.NewInvalidInputError("expected not empty entry")
+			return nil, errEntryPointIsEmpty
 		}
 	}
 
@@ -82,12 +87,12 @@ func NewBot(
 
 	for _, block := range blocks {
 		if block.IsZero() {
-			return nil, commonerrs.NewInvalidInputError("expected not empty block")
+			return nil, errBlockIsEmpty
 		}
 	}
 
 	if _, ok := es[startEntryKey]; !ok {
-		return nil, commonerrs.NewInvalidInputErrorf("expected has start entry %q", startEntryKey)
+		return nil, errEntryPointIsEmpty
 	}
 
 	bs, err := mapBlocks(blocks)
@@ -220,7 +225,7 @@ func UnmarshallBotFromDB(
 
 	for _, m := range mailings {
 		if m.IsZero() {
-			return nil, commonerrs.NewInvalidInputError("expected not empty mailing")
+			return nil, errMailingIsEmpty
 		}
 	}
 
@@ -301,22 +306,22 @@ func (b *Bot) Mailing(entryKey string) (Mailing, error) {
 	return m, nil
 }
 
-func (b *Bot) SetBlocks(entries []EntryPoint, blocks []Block) error {
-	for _, entry := range entries {
-		if entry.IsZero() {
-			return commonerrs.NewInvalidInputError("expected not empty entry")
-		}
-	}
-
-	es, err := mapEntries(entries)
-	if err != nil {
-		return err
-	}
-
+func (b *Bot) AddMailing(name string, requireState int, entry EntryPoint, blocks []Block) error {
 	for _, block := range blocks {
 		if block.IsZero() {
-			return commonerrs.NewInvalidInputError("expected not empty block")
+			return errBlockIsEmpty
 		}
+		if _, ok := b.blocks[block.State]; ok {
+			return newBlockIsDuplicatedError(block.State)
+		}
+	}
+
+	if _, ok := b.entryPoints[entry.Key]; ok {
+		return newEntryIsDuplicatedError(entry.Key)
+	}
+
+	if _, ok := b.mailings[entry.Key]; ok {
+		return newMailingIsDuplicatedError(entry.Key)
 	}
 
 	bs, err := mapBlocks(blocks)
@@ -324,9 +329,14 @@ func (b *Bot) SetBlocks(entries []EntryPoint, blocks []Block) error {
 		return err
 	}
 
+	bs = maps.Join(bs, b.blocks)
 	vs := vertices(bs)
-	for _, entry := range entries {
-		err := colorizeVertices(vs, entry.State)
+	err = colorizeVertices(vs, entry.State)
+	if err != nil {
+		return err
+	}
+	for _, entry := range b.entryPoints {
+		err = colorizeVertices(vs, entry.State)
 		if err != nil {
 			return err
 		}
@@ -336,9 +346,18 @@ func (b *Bot) SetBlocks(entries []EntryPoint, blocks []Block) error {
 		return newUnusedBlockFoundError(whiteVertexState)
 	}
 
-	b.blocks = bs
-	b.entryPoints = es
-	b.UpdatedAt = time.Now()
+	mailing, err := NewMailing(name, entry.Key, requireState)
+	if err != nil {
+		return err
+	}
+
+	// Apply
+	for _, block := range blocks {
+		b.blocks[block.State] = block
+	}
+
+	b.entryPoints[entry.Key] = entry
+	b.mailings[entry.Key] = mailing
 
 	return nil
 }
@@ -424,8 +443,8 @@ func mapEntries(entries []EntryPoint) (map[string]EntryPoint, error) {
 func mapMailings(mailings []Mailing) (map[string]Mailing, error) {
 	mapped := make(map[string]Mailing)
 	for _, mailing := range mailings {
-		if _, ok := mapped[mailing.Name]; ok {
-			return nil, newMailingIsDuplicatedError(mailing.Name)
+		if _, ok := mapped[mailing.EntryKey]; ok {
+			return nil, newMailingIsDuplicatedError(mailing.EntryKey)
 		}
 		mapped[mailing.EntryKey] = mailing
 	}
@@ -484,8 +503,12 @@ func (b *Bot) Traverse(startState int) []Block {
 	vs := vertices(b.blocks)
 	b.traverseRecursive(vs, startState)
 
+	notWhitePredicate := func(s int, v *vertex) bool {
+		return v.Color != white
+	}
+
 	traveled := make([]Block, 0, len(vs))
-	for _, v := range filterVertices(vs, notWhitePredicate) {
+	for _, v := range maps.Filter(vs, notWhitePredicate) {
 		traveled = append(traveled, v.Block)
 	}
 	return traveled
@@ -505,18 +528,4 @@ func (b *Bot) traverseRecursive(vertices map[int]*vertex, currentState int) {
 			next.Color = black
 		}
 	}
-}
-
-func filterVertices(vertices map[int]*vertex, predicate func(v *vertex) bool) []*vertex {
-	res := make([]*vertex, 0)
-	for _, v := range vertices {
-		if predicate(v) {
-			res = append(res, v)
-		}
-	}
-	return res
-}
-
-func notWhitePredicate(v *vertex) bool {
-	return v.Color != white
 }

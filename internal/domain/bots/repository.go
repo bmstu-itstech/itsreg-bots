@@ -14,6 +14,11 @@ func (e BotNotFoundError) Error() string {
 }
 
 type Repository interface {
+	Update(
+		ctx context.Context,
+		botUUID string,
+		updateFn func(innerCtx context.Context, bot *Bot) error,
+	) error
 	UpdateOrCreate(ctx context.Context, bot *Bot) error
 	UpdateStatus(ctx context.Context, botUUID string, status Status) error
 	Delete(ctx context.Context, uuid string) error

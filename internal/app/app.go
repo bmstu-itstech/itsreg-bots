@@ -11,14 +11,15 @@ type Application struct {
 }
 
 type Commands struct {
-	CreateBot    command.CreateBotHandler
-	DeleteBot    command.DeleteBotHandler
-	StartBot     command.StartBotHandler
-	StopBot      command.StopBotHandler
-	UpdateStatus command.UpdateStatusHandler
-	Entry        command.EntryHandler
-	Process      command.ProcessHandler
-	StartMailing command.StartMailingHandler
+	CreateBot     command.CreateBotHandler
+	DeleteBot     command.DeleteBotHandler
+	StartBot      command.StartBotHandler
+	StopBot       command.StopBotHandler
+	UpdateStatus  command.UpdateStatusHandler
+	Entry         command.EntryHandler
+	Process       command.ProcessHandler
+	CreateMailing command.CreateMailingHandler
+	StartMailing  command.StartMailingHandler
 }
 
 type Queries struct {

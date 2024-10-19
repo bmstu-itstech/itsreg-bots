@@ -106,6 +106,11 @@ type ClientInterface interface {
 	// GetAnswers request
 	GetAnswers(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// CreateMailingWithBody request with any body
+	CreateMailingWithBody(ctx context.Context, uuid string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateMailing(ctx context.Context, uuid string, body CreateMailingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// StartMailing request
 	StartMailing(ctx context.Context, uuid string, entryKey string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -178,6 +183,30 @@ func (c *Client) GetBot(ctx context.Context, uuid string, reqEditors ...RequestE
 
 func (c *Client) GetAnswers(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAnswersRequest(c.Server, uuid)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateMailingWithBody(ctx context.Context, uuid string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateMailingRequestWithBody(c.Server, uuid, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateMailing(ctx context.Context, uuid string, body CreateMailingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateMailingRequest(c.Server, uuid, body)
 	if err != nil {
 		return nil, err
 	}
@@ -393,6 +422,53 @@ func NewGetAnswersRequest(server string, uuid string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewCreateMailingRequest calls the generic CreateMailing builder with application/json body
+func NewCreateMailingRequest(server string, uuid string, body CreateMailingJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateMailingRequestWithBody(server, uuid, "application/json", bodyReader)
+}
+
+// NewCreateMailingRequestWithBody generates requests for CreateMailing with any type of body
+func NewCreateMailingRequestWithBody(server string, uuid string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "uuid", runtime.ParamLocationPath, uuid)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/bots/%s/mailings", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewStartMailingRequest generates requests for StartMailing
 func NewStartMailingRequest(server string, uuid string, entryKey string) (*http.Request, error) {
 	var err error
@@ -562,6 +638,11 @@ type ClientWithResponsesInterface interface {
 	// GetAnswersWithResponse request
 	GetAnswersWithResponse(ctx context.Context, uuid string, reqEditors ...RequestEditorFn) (*GetAnswersResponse, error)
 
+	// CreateMailingWithBodyWithResponse request with any body
+	CreateMailingWithBodyWithResponse(ctx context.Context, uuid string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateMailingResponse, error)
+
+	CreateMailingWithResponse(ctx context.Context, uuid string, body CreateMailingJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateMailingResponse, error)
+
 	// StartMailingWithResponse request
 	StartMailingWithResponse(ctx context.Context, uuid string, entryKey string, reqEditors ...RequestEditorFn) (*StartMailingResponse, error)
 
@@ -684,6 +765,30 @@ func (r GetAnswersResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetAnswersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateMailingResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON401      *Error
+	JSON403      *Error
+	JSON404      *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateMailingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateMailingResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -813,6 +918,23 @@ func (c *ClientWithResponses) GetAnswersWithResponse(ctx context.Context, uuid s
 		return nil, err
 	}
 	return ParseGetAnswersResponse(rsp)
+}
+
+// CreateMailingWithBodyWithResponse request with arbitrary body returning *CreateMailingResponse
+func (c *ClientWithResponses) CreateMailingWithBodyWithResponse(ctx context.Context, uuid string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateMailingResponse, error) {
+	rsp, err := c.CreateMailingWithBody(ctx, uuid, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateMailingResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateMailingWithResponse(ctx context.Context, uuid string, body CreateMailingJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateMailingResponse, error) {
+	rsp, err := c.CreateMailing(ctx, uuid, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateMailingResponse(rsp)
 }
 
 // StartMailingWithResponse request returning *StartMailingResponse
@@ -997,6 +1119,46 @@ func ParseGetAnswersResponse(rsp *http.Response) (*GetAnswersResponse, error) {
 	}
 
 	response := &GetAnswersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateMailingResponse parses an HTTP response from a CreateMailingWithResponse call
+func ParseCreateMailingResponse(rsp *http.Response) (*CreateMailingResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateMailingResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

@@ -224,6 +224,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /bots/{uuid}/mailings:
+    post:
+      operationId: createMailing
+      description: "Создать рассылку в боте. Для запуска рассылки необходимо отправить запрос на /bots/{uuid}/mailing/{entryKey}/start."
+      parameters:
+        - in: path
+          name: uuid
+          schema:
+            type: string
+            default: Bot's UUID
+          required: true
+          description: "Уникальный UUID бота."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMailing'
+      responses:
+        "200":
+          description: "TODO"
+        "401":
+          description: "Не был указан JWT токен."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "403":
+          description: "Нет доступа к боту с данным UUID."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: "Бот с данным UUID не найден."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /bots/{uuid}/mailings/{entryKey}/start:
     post:
       operationId: startMailing
@@ -473,6 +512,31 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Bot'
+
+    CreateMailing:
+      description: "Рассылка и связанные с ней точка входа и блоки."
+      type: object
+      required:
+        - name
+        - requiredState
+        - entryPoint
+        - blocks
+      properties:
+        name:
+          type: string
+          description: "Название рассылки."
+          example: "Рассылка участникам"
+        requiredState:
+          type: integer
+          description: "Состояние участника, необходимое для получения рассылки."
+          example: 0
+        entryPoint:
+          $ref: '#/components/schemas/EntryPoint'
+        blocks:
+          description: "Список блоков для рассылки. Обычно содержит единственный блок типа message."
+          type: array
+          items:
+            $ref: '#/components/schemas/Block'
 
     Error:
       description: "Описание ошибки."

@@ -77,14 +77,15 @@ func newApplication(
 ) *app.Application {
 	return &app.Application{
 		Commands: app.Commands{
-			CreateBot:    command.NewCreateBotHandler(bots, logger, metricsClient),
-			DeleteBot:    command.NewDeleteBotHandler(bots, runPub, logger, metricsClient),
-			StartBot:     command.NewStartBotHandler(bots, runPub, logger, metricsClient),
-			StopBot:      command.NewStopBotHandler(bots, runPub, logger, metricsClient),
-			UpdateStatus: command.NewUpdateStatusHandler(bots, logger, metricsClient),
-			Entry:        command.NewEntryHandler(bots, participants, msgPub, logger, metricsClient),
-			Process:      command.NewProcessHandler(bots, participants, msgPub, logger, metricsClient),
-			StartMailing: command.NewStartMailingHandler(bots, participants, msgPub, logger, metricsClient),
+			CreateBot:     command.NewCreateBotHandler(bots, logger, metricsClient),
+			DeleteBot:     command.NewDeleteBotHandler(bots, runPub, logger, metricsClient),
+			StartBot:      command.NewStartBotHandler(bots, runPub, logger, metricsClient),
+			StopBot:       command.NewStopBotHandler(bots, runPub, logger, metricsClient),
+			UpdateStatus:  command.NewUpdateStatusHandler(bots, logger, metricsClient),
+			Entry:         command.NewEntryHandler(bots, participants, msgPub, logger, metricsClient),
+			Process:       command.NewProcessHandler(bots, participants, msgPub, logger, metricsClient),
+			CreateMailing: command.NewCreateMailingHandler(bots, logger, metricsClient),
+			StartMailing:  command.NewStartMailingHandler(bots, participants, msgPub, logger, metricsClient),
 		},
 		Queries: app.Queries{
 			AllAnswers:  query.NewGetAnswersTableHandler(bots, participants, logger, metricsClient),

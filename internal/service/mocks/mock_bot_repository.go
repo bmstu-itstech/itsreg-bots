@@ -16,6 +16,29 @@ func NewMockBotRepository() bots.Repository {
 	return &mockBotRepository{m: make(map[string]bots.Bot)}
 }
 
+func (r *mockBotRepository) Update(
+	ctx context.Context,
+	botUUID string,
+	updateFn func(innerCtx context.Context, bot *bots.Bot) error,
+) error {
+	r.Lock()
+	defer r.Unlock()
+
+	bot, ok := r.m[botUUID]
+	if !ok {
+		return bots.BotNotFoundError{UUID: botUUID}
+	}
+
+	err := updateFn(ctx, &bot)
+	if err != nil {
+		return err
+	}
+
+	r.m[botUUID] = bot
+
+	return nil
+}
+
 func (r *mockBotRepository) UpdateOrCreate(_ context.Context, bot *bots.Bot) error {
 	r.Lock()
 	defer r.Unlock()

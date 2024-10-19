@@ -91,6 +91,21 @@ type Bot struct {
 // BotStatus Статус бота: started (запущен), stopped (не запущен), failed (ошибка запуска).
 type BotStatus string
 
+// CreateMailing Рассылка и связанные с ней точка входа и блоки.
+type CreateMailing struct {
+	// Blocks Список блоков для рассылки. Обычно содержит единственный блок типа message.
+	Blocks []Block `json:"blocks"`
+
+	// EntryPoint Точка входа для бота. Бот должен иметь как минимум точку входа "start". Иные точки входа используются для создания рассылок. Точка входа начинает скрипт бота с отправки блока с состоянием state пользователю.
+	EntryPoint EntryPoint `json:"entryPoint"`
+
+	// Name Название рассылки.
+	Name string `json:"name"`
+
+	// RequiredState Состояние участника, необходимое для получения рассылки.
+	RequiredState int `json:"requiredState"`
+}
+
 // EntryPoint Точка входа для бота. Бот должен иметь как минимум точку входа "start". Иные точки входа используются для создания рассылок. Точка входа начинает скрипт бота с отправки блока с состоянием state пользователю.
 type EntryPoint struct {
 	// Key Уникальный ключ точки входа бота.
@@ -152,3 +167,6 @@ type PostBots struct {
 
 // CreateBotJSONRequestBody defines body for CreateBot for application/json ContentType.
 type CreateBotJSONRequestBody = PostBots
+
+// CreateMailingJSONRequestBody defines body for CreateMailing for application/json ContentType.
+type CreateMailingJSONRequestBody = CreateMailing

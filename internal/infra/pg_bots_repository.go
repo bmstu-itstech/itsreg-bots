@@ -22,6 +22,89 @@ func NewPgBotsRepository(db *sqlx.DB) bots.Repository {
 	}
 }
 
+func (r *pgBotsRepository) Update(
+	ctx context.Context,
+	botUUID string,
+	updateFn func(innerCtx context.Context, bot *bots.Bot) error,
+) error {
+	return pgutils.RunTx(ctx, r.db, func(tx *sqlx.Tx) error {
+		bot, err := r.Bot(ctx, botUUID)
+		if err != nil {
+			return err
+		}
+
+		err = updateFn(ctx, bot)
+		if err != nil {
+			return err
+		}
+
+		if err = r.checkExecRes(tx.NamedExecContext(ctx,
+			`INSERT INTO bots 
+				(uuid, name, token, status, created_at, updated_at, owner_uuid)
+             VALUES (:uuid, :name, :token, :status, :created_at, :updated_at, :owner_uuid)
+			 ON CONFLICT ( uuid )
+				DO UPDATE SET name = :name,
+                              token = :token,
+                              status = :status,
+                              created_at = :created_at,
+                              updated_at = :updated_at,
+                              owner_uuid = :owner_uuid`,
+			convertBotToDB(bot),
+		)); err != nil {
+			return err
+		}
+
+		if err = r.noCheckExecRes(tx.NamedExecContext(ctx,
+			`INSERT INTO blocks
+				(bot_uuid, state, type, next_state, title, text) 
+			 VALUES (:bot_uuid, :state, :type, :next_state, :title, :text)
+             ON CONFLICT ( bot_uuid, state ) DO NOTHING`,
+			convertBlocksToDB(bot.UUID, bot.Blocks()),
+		)); err != nil {
+			return err
+		}
+
+		for _, block := range bot.Blocks() {
+			if len(block.Options) == 0 {
+				continue
+			}
+			if err = r.noCheckExecRes(tx.NamedExecContext(ctx,
+				`INSERT INTO options
+					(bot_uuid, state, next, text) 
+				 VALUES (:bot_uuid, :state, :next, :text)
+				 ON CONFLICT ( bot_uuid, state, text ) DO NOTHING`,
+				convertOptionsToDB(bot.UUID, block.State, block.Options),
+			)); err != nil {
+				return err
+			}
+		}
+
+		if err = r.noCheckExecRes(tx.NamedExecContext(ctx,
+			`INSERT INTO entry_points 
+				(bot_uuid, key, state) 
+			 VALUES (:bot_uuid, :key, :state)
+             ON CONFLICT ( bot_uuid, key ) DO NOTHING`,
+			convertEntryPointsToDB(bot.UUID, bot.Entries()),
+		)); err != nil {
+			return err
+		}
+
+		if len(bot.Mailings()) > 0 {
+			if err = r.noCheckExecRes(tx.NamedExecContext(ctx,
+				`INSERT INTO mailings 
+					(bot_uuid, name, entry_key, required_state) 
+			 	VALUES (:bot_uuid, :name, :entry_key, :required_state)
+                ON CONFLICT ( bot_uuid, entry_key ) DO NOTHING`,
+				convertMailingsToDB(bot.UUID, bot.Mailings()),
+			)); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
 func (r *pgBotsRepository) UpdateOrCreate(ctx context.Context, bot *bots.Bot) error {
 	return pgutils.RunTx(ctx, r.db, func(tx *sqlx.Tx) error {
 		_, err := tx.ExecContext(ctx, `DELETE FROM bots WHERE uuid = $1`, bot.UUID)
@@ -302,6 +385,10 @@ func (r *pgBotsRepository) checkExecRes(res sql.Result, err error) error {
 	}
 
 	return nil
+}
+
+func (r *pgBotsRepository) noCheckExecRes(_ sql.Result, err error) error {
+	return err
 }
 
 type optionRow struct {
