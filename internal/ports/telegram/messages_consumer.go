@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 )
@@ -44,6 +45,7 @@ func (c *messagesConsumer) Process() {
 			continue
 		}
 		msg.Ack()
+		time.Sleep(5 * time.Second)
 	}
 }
 
