@@ -281,7 +281,7 @@ func (s Server) GetAnswers(w http.ResponseWriter, r *http.Request, uuid string) 
 }
 
 func httpError(w http.ResponseWriter, r *http.Request, err error, code int) {
-	w.WriteHeader(code)
+	render.Status(r, code)
 	render.JSON(w, r, Error{Message: err.Error()})
 }
 
@@ -450,6 +450,7 @@ func convertBotsToAPI(bs []types.Bot) []Bot {
 
 func renderCSVAnswers(w http.ResponseWriter, answers types.AnswersTable) error {
 	csvWriter := csv.NewWriter(w)
+	w.Header().Set("Content-Type", "text/csv")
 
 	err := csvWriter.Write(answers.THead)
 	if err != nil {

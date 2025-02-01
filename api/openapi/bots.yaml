@@ -25,6 +25,12 @@ paths:
       responses:
         "201":
           description: "Бот успешно создан."
+        "400":
+          description: "Данные в запросе невалидны."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         "401":
           description: "Не был указан JWT токен."
           content:
@@ -42,6 +48,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetBots'
+        "400":
+          description: "Данные в запросе невалидны."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         "401":
           description: "Не был указан JWT токен."
           content:
@@ -68,6 +80,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Bot'
+        "400":
+          description: "Данные в запросе невалидны."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         "401":
           description: "Не был указан JWT токен."
           content:
@@ -100,6 +118,12 @@ paths:
       responses:
         "200":
           description: "Бот успешно удалён."
+        "400":
+          description: "Данные в запросе невалидны."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         "401":
           description: "Не был указан JWT токен."
           content:
@@ -136,6 +160,12 @@ paths:
           description: "Успешно получены ответы участников."
           content:
             text/csv: { }
+        "400":
+          description: "Данные в запросе невалидны."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         "401":
           description: "Не был указан JWT токен."
           content:
@@ -170,6 +200,12 @@ paths:
       responses:
         "200":
           description: "Успешно отправлен запрос на запуск бота."
+        "400":
+          description: "Данные в запросе невалидны."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         "401":
           description: "Не был указан JWT токен."
           content:
@@ -205,6 +241,12 @@ paths:
       responses:
         "200":
           description: "Успешно отправлен запрос на остановку бота."
+        "400":
+          description: "Данные в запросе невалидны."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         "401":
           description: "Не был указан JWT токен."
           content:
@@ -244,6 +286,12 @@ paths:
       responses:
         "200":
           description: "TODO"
+        "400":
+          description: "Данные в запросе невалидны."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         "401":
           description: "Не был указан JWT токен."
           content:
@@ -285,6 +333,12 @@ paths:
       responses:
         "200":
           description: "TODO"
+        "400":
+          description: "Данные в запросе невалидны."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         "401":
           description: "Не был указан JWT токен."
           content:

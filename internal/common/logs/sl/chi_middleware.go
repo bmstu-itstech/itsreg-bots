@@ -45,7 +45,7 @@ func (l *chiLoggerEntry) Write(status, bytes int, _ http.Header, elapsed time.Du
 		slog.String("resp_elapsed", elapsed.Round(time.Millisecond/100).String()),
 	)
 
-	l.log.Info("Request completed	")
+	l.log.Info("Request completed")
 }
 
 func (l *chiLoggerEntry) Panic(v interface{}, stack []byte) {
